@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>R J Salcedo: Developer</title>
+    <meta name="description" content="Portfolio of R J Salcedo, IT student at the University of Baguio building apps, AI tools and games." />
+    <meta name="theme-color" content="#fbfbfd" />
+    <meta name="color-scheme" content="light dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="R J Salcedo: Developer" />
+    <meta property="og:description" content="Apps, AI tools and games by R J Salcedo, IT student at the University of Baguio." />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Paint the right background before the app loads, so dark-mode visitors never see a white flash. -->
+    <script>
+      (function () {
+        try {
+          var pref = JSON.parse(localStorage.getItem('rj.theme') || '"system"');
+          var dark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.style.background = dark ? '#000000' : '#fbfbfd';
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+        } catch (e) {}
+      })();
+    </script>
+
+    <style id="expo-reset">
+      html, body { margin: 0; padding: 0; min-height: 100%; }
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        -webkit-tap-highlight-color: transparent;
+        overflow-x: hidden;
+      }
+      #root { display: flex; flex-direction: column; min-height: 100vh; }
+      [id] { scroll-margin-top: 52px; }
+      ::selection { background: rgba(0, 113, 227, 0.22); }
+      a { text-decoration: none; }
+      *:focus { outline: none; }
+      *:focus-visible { outline: 2px solid #0071e3; outline-offset: 2px; border-radius: 6px; }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      }
+
+      /* Résumé printing: only the paper, edge to edge, on white. */
+      @page { size: A4; margin: 12mm 14mm; }
+      @media print {
+        html, body { background: #fff !important; }
+        [data-noprint] { display: none !important; }
+        [data-paper] { box-shadow: none !important; padding: 0 !important; max-width: none !important; border-radius: 0 !important; }
+        [data-keep] { break-inside: avoid; }
+        [data-printflat] { background: #fff !important; padding: 0 !important; margin: 0 !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>This site needs JavaScript to run.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "rjsalcedo-portfolio",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "start": "expo start --web",
+    "web": "expo start --web",
+    "dev": "netlify dev",
+    "build:web": "expo export -p web",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
+    "@netlify/blobs": "^10.0.0",
+    "expo": "~57.0.26",
+    "expo-linear-gradient": "~57.0.2",
+    "expo-status-bar": "~57.0.1",
+    "qrcode-generator": "^2.0.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-web": "^0.21.0"
+  }
+}

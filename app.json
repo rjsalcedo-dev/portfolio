@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "R J Salcedo",
+    "slug": "rjsalcedo-portfolio",
+    "scheme": "rjsalcedo",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "themeColor": "#000000",
+      "backgroundColor": "#fbfbfd"
+    },
+    "plugins": []
+  }
+}

@@ -1,0 +1,12 @@
+node_modules/
+.expo/
+dist/
+web-build/
+.netlify
+.env*
+!.env.example
+npm-debug.*
+.DS_Store
+*.tsbuildinfo
+/ios
+/android

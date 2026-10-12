@@ -1,0 +1,16 @@
+# Deployed with the Netlify CLI (`npm run deploy`), same as Nuvix+.
+# Content, uploads and the contact inbox live in Netlify Blobs; set ADMIN_PASSWORD and
+# SESSION_SECRET in the site's environment variables before using /admin.
+[build]
+  command = "npm run build:web"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[dev]
+  command = "npx expo start --web --port 8081"
+  targetPort = 8081
+  port = 8888
+  framework = "#custom"
+
+[functions]
+  node_bundler = "esbuild"
