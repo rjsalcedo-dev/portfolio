@@ -12,6 +12,7 @@ import { relativeTime, slugify } from '../lib/format';
 import { normalizeContent } from '../data/defaults';
 import { Button, Card, IconButton, T } from '../components/ui';
 import { Field } from '../components/Form';
+import { ProgressBar } from '../components/Cards';
 import { CiscoQuickAdd, CredlyImport, DataPanel, EndorseRequests, FormPanel, InboxPanel, ListPanel, PanelHeader } from './panels';
 import { InsightsPanel, LinksPanel } from './insights';
 import { refreshShareCards } from './sharecards';
@@ -443,6 +444,10 @@ function Overview({ draft, unread, go, source }) {
         <View style={{ padding: 20, paddingBottom: 8 }}>
           <T variant="h3">{left ? `Polish your portfolio · ${left} to go` : 'Your portfolio is complete'}</T>
           <T variant="small" color="secondary" style={{ marginTop: 4 }}>Small things that make the biggest difference to recruiters.</T>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14 }}>
+            <View style={{ flex: 1 }}><ProgressBar value={(checklist.length - left) / checklist.length} /></View>
+            <T variant="caption" color="secondary" style={{ fontVariant: ['tabular-nums'] }}>{checklist.length - left} of {checklist.length}</T>
+          </View>
         </View>
         {checklist.map((c, i) => (
           <Pressable key={c.label} onPress={() => go(c.panel)} style={({ hovered }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 14, borderTopWidth: i ? 1 : 0, borderTopColor: colors.border, backgroundColor: hovered ? colors.surfaceMuted : 'transparent', cursor: 'pointer' })}>

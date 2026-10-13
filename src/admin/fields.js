@@ -4,11 +4,12 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Platform, Pressable, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, useBreakpoint } from '../context/ThemeContext';
 import { Checkbox, Field, FieldLabel, Segmented, Toggle } from '../components/Form';
 import { Button } from '../components/ui';
 import { api } from '../lib/api';
 import { compressImage, pdfPreview } from '../lib/media';
+import { SectionTitle, splitSections } from './kit';
 import { FONT, RADIUS } from '../theme/tokens';
 
 export const getIn = (obj, path) => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
@@ -176,33 +177,43 @@ function GalleryField({ label, hint, value, onChange }) {
   );
 }
 
-// Small inline repeater for lists of objects (social links, "Now" items).
+// Inline repeater for small lists (social links, "Now" items): column labels once at the
+// top, one row per item, with move and remove controls centered at the end of each row.
 function ListField({ label, hint, value, onChange, fields, newItem }) {
   const { colors } = useTheme();
+  const { isSm } = useBreakpoint();
   const items = value || [];
   const update = (i, v) => onChange(items.map((x, j) => (j === i ? v : x)));
   const move = (i, d) => { const n = [...items]; const [x] = n.splice(i, 1); n.splice(i + d, 0, x); onChange(n); };
+  const col = (f) => ({ flex: f.flex || 1, minWidth: isSm ? '100%' : 120 });
   return (
     <View>
       <FieldLabel label={label} hint={hint} />
-      <View style={{ gap: 10 }}>
+      <View style={{ borderWidth: 1, borderColor: colors.border, borderRadius: RADIUS.md, overflow: 'hidden' }}>
+        {items.length && !isSm ? (
+          <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.surfaceMuted }}>
+            {fields.map((f) => <Text key={f.key} style={[col(f), { fontFamily: FONT, fontSize: 12, fontWeight: '600', color: colors.text2 }]}>{f.label}</Text>)}
+            <View style={{ width: 96 }} />
+          </View>
+        ) : null}
         {items.map((item, i) => (
-          <View key={i} style={{ borderWidth: 1, borderColor: colors.border, borderRadius: RADIUS.md, padding: 12, gap: 10 }}>
-            <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
-              {fields.map((f) => (
-                <View key={f.key} style={{ flex: f.flex || 1, minWidth: 140 }}>
-                  <FieldRenderer field={{ ...f, label: i === 0 ? f.label : undefined }} value={getIn(item, f.key)} onChange={(v) => update(i, setIn(item, f.key, v))} />
-                </View>
-              ))}
-            </View>
-            <View style={{ flexDirection: 'row', gap: 4, justifyContent: 'flex-end' }}>
+          <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, paddingLeft: 12, borderTopWidth: i || !isSm ? 1 : 0, borderTopColor: colors.border, flexWrap: isSm ? 'wrap' : 'nowrap' }}>
+            {fields.map((f) => (
+              <View key={f.key} style={col(f)}>
+                <FieldRenderer field={{ ...f, label: isSm ? f.label : undefined }} value={getIn(item, f.key)} onChange={(v) => update(i, setIn(item, f.key, v))} />
+              </View>
+            ))}
+            <View style={{ flexDirection: 'row', alignItems: 'center', width: 96, justifyContent: 'flex-end' }}>
               <MiniButton icon="arrow-up" label="Move up" disabled={i === 0} onPress={() => move(i, -1)} />
               <MiniButton icon="arrow-down" label="Move down" disabled={i === items.length - 1} onPress={() => move(i, 1)} />
               <MiniButton icon="trash-2" label="Remove" danger onPress={() => onChange(items.filter((_, j) => j !== i))} />
             </View>
           </View>
         ))}
-        <Button size="sm" variant="secondary" icon="plus" title="Add" onPress={() => onChange([...items, newItem ? newItem() : {}])} />
+        <Pressable onPress={() => onChange([...items, newItem ? newItem() : {}])} style={({ hovered }) => ({ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, height: 44, borderTopWidth: items.length ? 1 : 0, borderTopColor: colors.border, backgroundColor: hovered ? colors.surfaceMuted : 'transparent', cursor: 'pointer' })}>
+          <Feather name="plus" size={15} color={colors.accentText} />
+          <Text style={{ fontFamily: FONT, fontSize: 14, fontWeight: '500', color: colors.accentText }}>Add {String(label || 'item').toLowerCase().replace(/s$/, '')}</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -264,19 +275,26 @@ export function FieldGroup({ fields, value, onChange, context }) {
       onChange(v.preview && !keepImage ? { ...next, image: v.preview, previewOf: v.preview } : next);
     } else onChange(setIn(value, f.key, v));
   };
+  const renderField = (f) => (f.row ? (
+    <View key={f.row.map((x) => x.key).join()} style={{ flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>
+      {f.row.map((x) => (
+        <View key={x.key} style={{ flex: 1, minWidth: 180 }}>
+          <FieldRenderer field={x} value={getIn(value, x.key)} onChange={(v) => setField(x, v)} context={context} />
+        </View>
+      ))}
+    </View>
+  ) : (
+    <FieldRenderer key={f.key} field={f} value={getIn(value, f.key)} onChange={(v) => setField(f, v)} context={context} />
+  ));
+  // Fields can be grouped with { section: 'Title', description } markers.
   return (
     <View style={{ gap: 20 }}>
-      {fields.map((f) => (f.row ? (
-        <View key={f.row.map((x) => x.key).join()} style={{ flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>
-          {f.row.map((x) => (
-            <View key={x.key} style={{ flex: 1, minWidth: 160 }}>
-              <FieldRenderer field={x} value={getIn(value, x.key)} onChange={(v) => setField(x, v)} context={context} />
-            </View>
-          ))}
+      {splitSections(fields).map((g, gi) => (
+        <View key={g.title || gi} style={{ gap: 18 }}>
+          {g.title ? <SectionTitle title={g.title} description={g.description} first={gi === 0} /> : null}
+          {g.fields.map(renderField)}
         </View>
-      ) : (
-        <FieldRenderer key={f.key} field={f} value={getIn(value, f.key)} onChange={(v) => setField(f, v)} context={context} />
-      )))}
+      ))}
     </View>
   );
 }

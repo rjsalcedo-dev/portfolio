@@ -6,41 +6,60 @@ import { useTheme, useBreakpoint } from '../context/ThemeContext';
 import { Button, Card, T, Tag } from '../components/ui';
 import { Field, Segmented } from '../components/Form';
 import { FieldGroup, MiniButton } from './fields';
+import { EmptyState, PanelHeader, SectionTitle, ToolCard, ToolbarButton, splitSections } from './kit';
 import { COLLECTIONS, NETACAD_COURSES, NETACAD_ISSUER } from './schemas';
 import { api } from '../lib/api';
 import { relativeTime, uid } from '../lib/format';
 import { normalizeContent } from '../data/defaults';
 import { FONT, RADIUS } from '../theme/tokens';
 
-export function PanelHeader({ title, subtitle, action }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-      <View style={{ flexShrink: 1 }}>
-        <T variant="h2">{title}</T>
-        {subtitle ? <T variant="small" color="secondary" style={{ marginTop: 4 }}>{subtitle}</T> : null}
-      </View>
-      {action}
-    </View>
-  );
-}
+export { PanelHeader };
 
-// ── Form panel (profile, education, now, settings) ──────────────────────────────────
+// ── Form panel (profile, education, now, settings): one card per section ──────────
 export function FormPanel({ title, subtitle, fields, value, onChange, children }) {
+  const groups = splitSections(fields);
   return (
-    <View>
+    <View style={{ maxWidth: 860 }}>
       <PanelHeader title={title} subtitle={subtitle} />
-      <Card><FieldGroup fields={fields} value={value} onChange={onChange} /></Card>
+      <View style={{ gap: 16 }}>
+        {groups.map((g, i) => (
+          <Card key={g.title || i}>
+            {g.title ? (
+              <View style={{ marginBottom: 20 }}>
+                <T variant="body" weight="600">{g.title}</T>
+                {g.description ? <T variant="small" color="secondary" style={{ marginTop: 2 }}>{g.description}</T> : null}
+              </View>
+            ) : null}
+            <FieldGroup fields={g.fields} value={value} onChange={onChange} />
+          </Card>
+        ))}
+      </View>
       {children}
     </View>
   );
 }
 
-// ── List panel: a master list plus a form for the selected item ─────────────────────
+// "entry" → "entries", "role" → "roles".
+const plural = (w) => (/[^aeiou]y$/.test(w) ? `${w.slice(0, -1)}ies` : `${w}s`);
+
+// What each list shows when it's empty.
+const EMPTY = {
+  projects: ['box', 'No projects yet', 'Add your first project to show it in the Work section.', 'Add a project'],
+  credentials: ['award', 'No credentials yet', 'Add Cisco certificates above, import Credly badges, or add one by hand.', 'Add a credential'],
+  experience: ['briefcase', 'No experience yet', 'OJT, part-time work, freelance builds and org roles all count.', 'Add a role'],
+  achievements: ['star', 'No honors or activities yet', "Dean's list, competitions, seminars, org leadership, volunteering.", 'Add an entry'],
+  testimonials: ['message-square', 'No testimonials yet', 'Request one above, or add a quote you already have.', 'Add a testimonial'],
+  skills: ['layers', 'No skill groups yet', 'Group skills like Languages, Frameworks and Tools.', 'Add a skill group'],
+  resumes: ['file-text', 'No résumé versions yet', 'Create one version per kind of role you apply for.', 'Add a version'],
+};
+
+// ── List panel: a list on the left, the selected item's editor on the right ─────────
 export function ListPanel({ name, items, onChange, content, extra, previewHref }) {
   const { colors } = useTheme();
   const { isLg } = useBreakpoint();
   const schema = COLLECTIONS[name];
   const [selectedId, setSelectedId] = useState(isLg ? items[0]?.id : null);
+  const [query, setQuery] = useState('');
   const index = items.findIndex((x) => x.id === selectedId);
   const selected = items[index];
 
@@ -49,60 +68,100 @@ export function ListPanel({ name, items, onChange, content, extra, previewHref }
   const add = () => { const n = schema.newItem(); onChange([n, ...items]); setSelectedId(n.id); };
   const update = (v) => onChange(items.map((x) => (x.id === selected.id ? (schema.beforeSave ? schema.beforeSave(v) : v) : x)));
   const remove = () => {
-    if (typeof window !== 'undefined' && !window.confirm(`Delete "${schema.label(selected)}"? You can still undo by not saving.`)) return;
+    if (typeof window !== 'undefined' && !window.confirm(`Delete "${schema.label(selected)}"? You can undo this with Discard until you publish.`)) return;
     onChange(items.filter((x) => x.id !== selected.id));
     setSelectedId(isLg ? items.find((x) => x.id !== selected.id)?.id : null);
   };
   const duplicate = () => { const n = { ...selected, id: uid(name[0]), ...(selected.slug != null ? { slug: '' } : {}), [selected.title != null ? 'title' : 'name']: `${schema.label(selected)} copy` }; onChange([...items.slice(0, index + 1), n, ...items.slice(index + 1)]); setSelectedId(n.id); };
   const move = (i, d) => { const n = [...items]; const [x] = n.splice(i, 1); n.splice(i + d, 0, x); onChange(n); };
 
+  const q = query.trim().toLowerCase();
+  const shown = items.map((item, i) => ({ item, i })).filter(({ item, i }) => !q || `${schema.label(item)} ${schema.sub(item, i)}`.toLowerCase().includes(q));
+  const empty = EMPTY[name] || ['inbox', `No ${schema.title.toLowerCase()} yet`, '', `Add ${schema.singular}`];
+
+  const header = (
+    <PanelHeader
+      title={schema.title}
+      subtitle={`${items.length} ${items.length === 1 ? schema.singular : plural(schema.singular)} · shown on the site in this order`}
+      action={<Button icon="plus" title={`New ${schema.singular}`} size="sm" onPress={add} align="center" />}
+    />
+  );
+
+  if (!items.length) {
+    return <View>{header}{extra}<EmptyState icon={empty[0]} title={empty[1]} description={empty[2]} actionTitle={empty[3]} onAction={add} /></View>;
+  }
+
   const list = (
-    <View style={{ width: isLg ? 300 : '100%', gap: 4 }}>
-      {items.length === 0 ? <T variant="small" color="secondary" style={{ padding: 16 }}>No {schema.title.toLowerCase()} yet.</T> : null}
-      {items.map((item, i) => {
-        const on = item.id === selectedId;
-        const thumb = schema.thumb?.(item);
-        return (
-          <Pressable
-            key={item.id}
-            onPress={() => setSelectedId(item.id)}
-            style={({ hovered }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingLeft: 12, paddingRight: 4, borderRadius: RADIUS.md, backgroundColor: on ? colors.accentSoft : hovered ? colors.surfaceMuted : 'transparent', cursor: 'pointer' })}
-          >
-            {thumb ? <Image source={{ uri: thumb }} style={{ width: 32, height: 32, borderRadius: 6 }} resizeMode="contain" /> : null}
-            <View style={{ flex: 1 }}>
-              <Text numberOfLines={1} style={{ fontFamily: FONT, fontSize: 15, fontWeight: '500', color: on ? colors.accentText : colors.text }}>{schema.label(item)}</Text>
-              <Text numberOfLines={1} style={{ fontFamily: FONT, fontSize: 12, color: colors.text2 }}>{schema.sub(item, i) || ' '}</Text>
-            </View>
-            <MiniButton icon="chevron-up" label="Move up" disabled={i === 0} onPress={() => move(i, -1)} />
-            <MiniButton icon="chevron-down" label="Move down" disabled={i === items.length - 1} onPress={() => move(i, 1)} />
-          </Pressable>
-        );
-      })}
-    </View>
+    <Card padded={false} style={{ width: isLg ? 320 : '100%', ...(isLg ? { position: 'sticky', top: 80, alignSelf: 'flex-start' } : null) }}>
+      {items.length > 6 ? (
+        <View style={{ padding: 10, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+          <Field value={query} onChange={setQuery} placeholder={`Search ${schema.title.toLowerCase()}`} inputStyle={{ height: 36, fontSize: 14 }} />
+        </View>
+      ) : null}
+      <ScrollView style={{ maxHeight: isLg ? 'calc(100vh - 220px)' : undefined }}>
+        {shown.map(({ item, i }, n) => {
+          const on = item.id === selectedId;
+          const thumb = schema.thumb?.(item);
+          return (
+            <Pressable
+              key={item.id}
+              onPress={() => setSelectedId(item.id)}
+              style={({ hovered }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingLeft: 14, paddingRight: 8, borderTopWidth: n ? 1 : 0, borderTopColor: colors.border, backgroundColor: on ? colors.accentSoft : hovered ? colors.surfaceMuted : 'transparent', cursor: 'pointer' })}
+            >
+              {({ hovered }) => (
+                <>
+                  <View style={{ width: 36, height: 36, borderRadius: 9, overflow: 'hidden', backgroundColor: on ? colors.surface : colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' }}>
+                    {thumb ? <Image source={{ uri: thumb }} style={{ width: 36, height: 36 }} resizeMode="contain" /> : (
+                      <Text style={{ fontFamily: FONT, fontSize: 14, fontWeight: '600', color: on ? colors.accentText : colors.text2 }}>{String(schema.label(item)).trim()[0]?.toUpperCase() || '?'}</Text>
+                    )}
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text numberOfLines={1} style={{ fontFamily: FONT, fontSize: 14, fontWeight: '600', color: on ? colors.accentText : colors.text }}>{schema.label(item)}</Text>
+                    <Text numberOfLines={1} style={{ fontFamily: FONT, fontSize: 12, color: colors.text2, marginTop: 1 }}>{schema.sub(item, i) || ' '}</Text>
+                  </View>
+                  {/* Reorder controls only appear where you're working, to keep the list calm. */}
+                  {(hovered || on) && !q ? (
+                    <View style={{ flexDirection: 'row' }}>
+                      <MiniButton icon="chevron-up" label="Move up" disabled={i === 0} onPress={() => move(i, -1)} />
+                      <MiniButton icon="chevron-down" label="Move down" disabled={i === items.length - 1} onPress={() => move(i, 1)} />
+                    </View>
+                  ) : null}
+                </>
+              )}
+            </Pressable>
+          );
+        })}
+        {!shown.length ? <T variant="small" color="secondary" style={{ padding: 16 }}>No matches.</T> : null}
+      </ScrollView>
+    </Card>
   );
 
   const editor = selected ? (
-    <View style={{ flex: 1, minWidth: 0 }}>
-      <Card>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 8, flexWrap: 'wrap' }}>
-          {!isLg ? <Button variant="link" size="sm" icon="chevron-left" title={`All ${schema.title.toLowerCase()}`} onPress={() => setSelectedId(null)} /> : <T variant="h3" numberOfLines={1} style={{ flexShrink: 1 }}>{schema.label(selected)}</T>}
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {previewHref ? <Button align="center" size="sm" variant="secondary" icon="eye" title="Preview" href={previewHref(selected, index)} external /> : null}
-            <Button align="center" size="sm" variant="secondary" icon="copy" title="Duplicate" onPress={duplicate} />
-            <Button align="center" size="sm" variant="danger" icon="trash-2" title="Delete" onPress={remove} />
+    <Card padded={false} style={{ flex: 1, minWidth: 0 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+        {!isLg ? <Button variant="link" size="sm" icon="chevron-left" title={schema.title} onPress={() => setSelectedId(null)} align="center" /> : (
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <T variant="body" weight="600" numberOfLines={1}>{schema.label(selected)}</T>
+            <T variant="caption" color="secondary" numberOfLines={1}>{schema.sub(selected, index) || ' '}</T>
           </View>
-        </View>
+        )}
+        {!isLg ? <View style={{ flex: 1 }} /> : null}
+        {previewHref ? <Button align="center" size="sm" variant="secondary" icon="eye" title="Preview" href={previewHref(selected, index)} external /> : null}
+        <ToolbarButton icon="copy" label="Duplicate" onPress={duplicate} />
+        <ToolbarButton icon="trash-2" label="Delete" danger onPress={remove} />
+      </View>
+      <View style={{ padding: 24 }}>
         <FieldGroup key={selected.id} fields={schema.fields} value={selected} onChange={update} context={content} />
-      </Card>
-    </View>
+      </View>
+    </Card>
   ) : null;
 
   return (
     <View>
-      <PanelHeader title={schema.title} subtitle={`${items.length} ${items.length === 1 ? schema.singular : `${schema.singular}s`}. Order here is the order on the site.`} action={<Button icon="plus" title={`New ${schema.singular}`} size="sm" onPress={add} />} />
+      {header}
       {extra}
       {isLg ? (
-        <View style={{ flexDirection: 'row', gap: 24, alignItems: 'flex-start' }}>{list}{editor}</View>
+        <View style={{ flexDirection: 'row', gap: 20, alignItems: 'flex-start' }}>{list}{editor}</View>
       ) : selected ? editor : list}
     </View>
   );
@@ -140,17 +199,12 @@ export function CredlyImport({ username, onUsername, credentials, onChange, toas
     setBusy(false);
   };
   return (
-    <Card style={{ marginBottom: 24 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <Feather name="download-cloud" size={18} color={colors.accentText} />
-        <T variant="body" weight="600">Import from Credly</T>
-      </View>
-      <T variant="small" color="secondary" style={{ marginBottom: 14 }}>Pulls every public badge (Cisco NetAcad badges are issued through Credly) with its image and verification link. Running it again refreshes them without making duplicates.</T>
+    <ToolCard icon="download-cloud" title="Import from Credly" description="Pulls every public badge with its image and verification link. Running it again refreshes them without duplicates." style={{ marginBottom: 24 }}>
       <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
         <Field value={username} onChange={onUsername} placeholder="credly.com/users/your-name" autoCapitalize="none" style={{ flex: 1, minWidth: 220 }} />
         <Button align="center" title="Import badges" onPress={run} loading={busy} disabled={!username} icon="refresh-cw" />
       </View>
-    </Card>
+    </ToolCard>
   );
 }
 
@@ -179,19 +233,15 @@ export function CiscoQuickAdd({ credentials, onChange, toast }) {
   };
 
   return (
-    <Card style={{ marginBottom: 16 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#049fd9', alignItems: 'center', justifyContent: 'center' }}>
-          <Feather name="globe" size={18} color="#fff" />
-        </View>
-        <View style={{ flex: 1, minWidth: 220 }}>
-          <T variant="body" weight="600">Cisco Networking Academy certificates</T>
-          <T variant="small" color="secondary">Pick the courses you finished; then upload each certificate PDF from netacad.com.</T>
-        </View>
-        <Button align="center" size="sm" variant={open ? 'secondary' : 'primary'} title={open ? 'Close' : 'Choose courses'} onPress={() => setOpen((o) => !o)} />
-      </View>
+    <ToolCard
+      icon="globe"
+      tint="#049fd9"
+      title="Cisco Networking Academy certificates"
+      description="Pick the courses you finished, then upload each certificate PDF from netacad.com."
+      action={<Button align="center" size="sm" variant={open ? 'secondary' : 'primary'} title={open ? 'Close' : 'Choose courses'} onPress={() => setOpen((o) => !o)} />}
+    >
       {open ? (
-        <View style={{ marginTop: 16, gap: 14 }}>
+        <View style={{ gap: 14 }}>
           <Field value={query} onChange={setQuery} placeholder="Search courses (CCNA, Python, Cybersecurity…)" />
           {groups.map((g) => (
             <View key={g}>
@@ -224,7 +274,7 @@ export function CiscoQuickAdd({ credentials, onChange, toast }) {
           </View>
         </View>
       ) : null}
-    </Card>
+    </ToolCard>
   );
 }
 
@@ -281,12 +331,7 @@ export function EndorseRequests({ testimonials, onChange, toast }) {
   };
 
   return (
-    <Card style={{ marginBottom: 24 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-        <Feather name="send" size={17} color={colors.accentText} />
-        <T variant="body" weight="600">Request a testimonial</T>
-      </View>
-      <T variant="small" color="secondary" style={{ marginBottom: 14 }}>Send a professor, OJT supervisor or teammate a private link. They write a few sentences, and you approve it here before it goes live.</T>
+    <ToolCard icon="send" title="Request a testimonial" description="Send a professor, OJT supervisor or teammate a private link. You approve what they write before it goes live." style={{ marginBottom: 24 }}>
       <View style={{ flexDirection: isSm ? 'column' : 'row', gap: 10, alignItems: isSm ? 'stretch' : 'flex-end' }}>
         <Field label="Their name" value={name} onChange={setName} placeholder="Prof. Santos" style={{ flex: 1 }} />
         <Field label="They are your…" value={relationship} onChange={setRelationship} placeholder="Capstone adviser" style={{ flex: 1 }} onSubmitEditing={create} />
@@ -327,7 +372,7 @@ export function EndorseRequests({ testimonials, onChange, toast }) {
           })}
         </View>
       ) : null}
-    </Card>
+    </ToolCard>
   );
 }
 
@@ -509,25 +554,6 @@ function MessageRow({ m, active, first, onPress }) {
         </View>
         <Text numberOfLines={2} style={{ fontFamily: FONT, fontSize: 13, lineHeight: 18, color: colors.text2, marginTop: 3 }}>{m.message}</Text>
       </View>
-    </Pressable>
-  );
-}
-
-// 34pt round toolbar button, matching the height of the small pill buttons beside it.
-function ToolbarButton({ icon, label, onPress, danger }) {
-  const { colors } = useTheme();
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ hovered, pressed }) => ({
-        width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center',
-        backgroundColor: hovered ? (danger ? colors.dangerSoft : colors.border) : colors.surfaceMuted,
-        opacity: pressed ? 0.7 : 1, cursor: 'pointer', transitionProperty: 'background-color', transitionDuration: '150ms',
-      })}
-    >
-      <Feather name={icon} size={15} color={danger ? colors.danger : colors.text} />
     </Pressable>
   );
 }

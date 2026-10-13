@@ -8,15 +8,18 @@ const ICONS = [
 ];
 
 export const PROFILE_FIELDS = [
+  { section: 'Identity', description: 'How you appear in the nav, the hero and the résumé.' },
   { row: [{ key: 'name', label: 'Name' }, { key: 'initials', label: 'Initials', hint: 'nav logo' }] },
-  { key: 'role', label: 'Role', placeholder: 'IT Student & Software Developer' },
+  { key: 'role', label: 'Role', placeholder: 'Computer Science Student & Software Developer' },
+  { key: 'avatar', label: 'Photo', type: 'image' },
+  { section: 'Hero', description: 'The first thing visitors read.' },
   { key: 'headline', label: 'Headline', hint: 'the big line at the top' },
   { key: 'intro', label: 'Intro', type: 'textarea', rows: 3 },
+  { row: [{ key: 'status.open', label: 'Available for work', type: 'toggle', hint: 'Green pulsing dot' }, { key: 'status.label', label: 'Availability text', placeholder: 'Open to internships & OJT' }] },
+  { section: 'About' },
   { key: 'about', label: 'About', type: 'textarea', rows: 7, hint: 'blank line = new paragraph' },
   { row: [{ key: 'location', label: 'Location' }, { key: 'email', label: 'Public email', hint: 'leave blank to hide', autoCapitalize: 'none' }] },
-  { key: 'avatar', label: 'Photo', type: 'image' },
-  { key: 'status.open', label: 'Available for work', type: 'toggle', hint: 'Shows a green pulsing dot in the hero' },
-  { key: 'status.label', label: 'Availability text', placeholder: 'Open to internships & OJT' },
+  { section: 'Links', description: 'Shown in Contact, the footer, the résumé and your business card.' },
   {
     key: 'socials', label: 'Links', type: 'list', newItem: () => ({ label: '', url: '', icon: 'link' }),
     fields: [{ key: 'label', label: 'Label' }, { key: 'url', label: 'URL', type: 'url', flex: 2 }, { key: 'icon', label: 'Icon', type: 'select', options: ICONS, flex: 3 }],
@@ -24,9 +27,10 @@ export const PROFILE_FIELDS = [
 ];
 
 export const EDUCATION_FIELDS = [
+  { section: 'School' },
   { key: 'school', label: 'School' },
-  { key: 'program', label: 'Program' },
-  { key: 'location', label: 'Location' },
+  { row: [{ key: 'program', label: 'Program' }, { key: 'location', label: 'Location' }] },
+  { section: 'Timeline', description: 'Your site calculates year level and progress to graduation from these dates.' },
   { row: [{ key: 'start', label: 'Started', type: 'month' }, { key: 'end', label: 'Graduation (expected)', type: 'month' }] },
   { key: 'notes', label: 'Notes', type: 'textarea', rows: 3, hint: 'honors, focus, thesis' },
 ];
@@ -37,14 +41,18 @@ export const NOW_FIELDS = [
 ];
 
 export const SETTINGS_FIELDS = [
+  { section: 'Search & sharing', description: 'How your site appears in Google results and browser tabs.' },
   { key: 'siteTitle', label: 'Browser tab title' },
   { key: 'siteDescription', label: 'Search description', type: 'textarea', rows: 2 },
-  { key: 'showContactForm', label: 'Show contact form', type: 'toggle', hint: 'Messages arrive in the Inbox' },
+  { section: 'Homepage features' },
   { key: 'showIntro', label: 'Welcome animation', type: 'toggle', hint: 'A short intro on the first visit to the home page' },
-  { key: 'showRoleFit', label: 'Show the role-fit checker', type: 'toggle', hint: 'Recruiters paste a job description and see your matching proof' },
+  { key: 'showRoleFit', label: 'Role-fit checker', type: 'toggle', hint: 'Recruiters paste a job description and see your matching proof' },
+  { key: 'showContactForm', label: 'Contact form', type: 'toggle', hint: 'Messages arrive in the Inbox' },
+  { section: 'GitHub activity' },
   { key: 'showGithub', label: 'Show GitHub activity', type: 'toggle', hint: 'Appears once your accounts have at least 10 contributions this year' },
-  { key: 'githubUsers', label: 'GitHub accounts', type: 'tags', hint: 'comma separated; activity from all of them is combined' },
-  { row: [{ key: 'city', label: 'City', hint: 'for the local-time chip' }, { key: 'replyTime', label: 'Usually replies…', placeholder: 'within a day' }] },
+  { key: 'githubUsers', label: 'GitHub accounts', type: 'tags', hint: 'comma separated; activity is combined' },
+  { section: 'Contact', description: 'Shown as chips above your contact form and on the brief.' },
+  { row: [{ key: 'city', label: 'City', hint: 'for the local time' }, { key: 'replyTime', label: 'Usually replies…', placeholder: 'within a day' }] },
 ];
 
 export const COLLECTIONS = {
@@ -56,19 +64,24 @@ export const COLLECTIONS = {
     newItem: () => ({ id: uid('p'), slug: '', title: 'New project', tagline: '', category: '', year: String(new Date().getFullYear()), role: '', status: 'In progress', featured: false, hidden: false, cover: '', stack: [], links: { live: '', repo: '' }, summary: '', highlights: [], body: '' }),
     beforeSave: (p) => ({ ...p, slug: cleanSlug(p.slug) }),
     fields: [
+      { section: 'Basics' },
       { row: [{ key: 'title', label: 'Title' }, { key: 'slug', label: 'URL slug', hint: 'auto from title' }] },
       { key: 'tagline', label: 'Tagline', hint: 'one sentence' },
       { row: [{ key: 'category', label: 'Category', placeholder: 'Mobile & Web' }, { key: 'year', label: 'Year' }] },
       { row: [{ key: 'role', label: 'Your role' }, { key: 'status', label: 'Status', placeholder: 'Live / In progress / Prototype' }] },
       { row: [{ key: 'featured', label: 'Featured', type: 'toggle', hint: 'Large card at the top' }, { key: 'hidden', label: 'Hidden', type: 'toggle', hint: 'Keep it off the site' }] },
-      { key: 'cover', label: 'Cover image', type: 'image', hint: '16:10 works best; blank = generated cover' },
       { key: 'stack', label: 'Built with', type: 'tags' },
+      { section: 'Links' },
       { row: [{ key: 'links.live', label: 'Live URL', type: 'url' }, { key: 'links.repo', label: 'Repository URL', type: 'url' }] },
       { key: 'links.video', label: 'Demo video URL', type: 'url', hint: 'YouTube, Drive or Loom' },
+      { section: 'Media' },
+      { key: 'cover', label: 'Cover image', type: 'image', hint: '16:10 works best; blank = generated cover' },
+      { section: 'Case study', description: 'Start a paragraph with "The problem.", "How it works." or "My part." to make a section.' },
       { key: 'metrics', label: 'Key numbers', type: 'list', hint: '2–4 facts shown under the cover', newItem: () => ({ value: '', label: '' }), fields: [{ key: 'value', label: 'Number', placeholder: '83%' }, { key: 'label', label: 'Label', placeholder: 'of the commits', flex: 2 }] },
       { key: 'summary', label: 'Summary', type: 'textarea', rows: 3, hint: 'used on the résumé' },
       { key: 'highlights', label: 'Highlights', type: 'lines' },
       { key: 'body', label: 'Case study', type: 'textarea', rows: 12, hint: 'start a paragraph with "The problem.", "How it works.", "My part." (or a line "## Heading") to make a section' },
+      { section: 'Screenshots' },
       { key: 'gallery', label: 'Screenshots', type: 'gallery', hint: 'shown on the project page; tap to enlarge' },
     ],
   },
@@ -80,14 +93,18 @@ export const COLLECTIONS = {
     thumb: (c) => c.image,
     newItem: () => ({ id: uid('c'), title: 'New certificate', issuer: 'Cisco Networking Academy', issued: '', expires: '', kind: 'certificate', image: '', file: '', credentialId: '', verifyUrl: '', description: '', skills: [], featured: false, hidden: false }),
     fields: [
+      { section: 'Details' },
       { key: 'title', label: 'Title' },
       { row: [{ key: 'issuer', label: 'Issuer' }, { key: 'kind', label: 'Type', type: 'select', options: [{ value: 'certificate', label: 'Certificate' }, { value: 'badge', label: 'Badge' }] }] },
       { row: [{ key: 'issued', label: 'Issued', type: 'month' }, { key: 'expires', label: 'Expires', type: 'month', hint: 'optional' }] },
+      { section: 'Files' },
       { key: 'file', label: 'Certificate file', type: 'document', hint: 'PDF or image; a preview is made automatically' },
       { key: 'image', label: 'Badge / preview image', type: 'image' },
+      { section: 'Verification & skills' },
       { row: [{ key: 'credentialId', label: 'Credential ID', hint: 'optional' }, { key: 'verifyUrl', label: 'Verification link', type: 'url', hint: 'Credly or NetAcad' }] },
       { key: 'description', label: 'Description', type: 'textarea', rows: 3, hint: 'what the course covered' },
       { key: 'skills', label: 'Skills', type: 'tags' },
+      { section: 'Display' },
       { row: [{ key: 'featured', label: 'Pin to top', type: 'toggle' }, { key: 'hidden', label: 'Hidden', type: 'toggle' }] },
     ],
   },
@@ -155,10 +172,12 @@ export const COLLECTIONS = {
     newItem: () => ({ id: uid('r'), slug: '', name: 'New version', headline: '', summary: '', projectIds: [], credentialIds: [], experienceIds: [], achievementIds: [], skillIds: [], showQr: true }),
     beforeSave: (r) => ({ ...r, slug: cleanSlug(r.slug) }),
     fields: [
+      { section: 'Version' },
       { row: [{ key: 'name', label: 'Version name', placeholder: 'Networking' }, { key: 'slug', label: 'Link', hint: '/resume/<link>', placeholder: 'networking' }] },
       { key: 'headline', label: 'Headline', placeholder: 'Aspiring Network Engineer' },
       { key: 'summary', label: 'Summary', type: 'textarea', rows: 4 },
       { key: 'showQr', label: 'QR code to portfolio', type: 'toggle', hint: 'Printed in the top corner so paper readers can open your site' },
+      { section: 'What to include', description: 'Tick what this version shows. Order follows the site.' },
       { key: 'projectIds', label: 'Projects', type: 'pick', options: (c) => c.projects.map((p) => ({ id: p.id, label: p.title, sub: p.category })) },
       { key: 'experienceIds', label: 'Experience', type: 'pick', options: (c) => c.experience.map((x) => ({ id: x.id, label: x.role, sub: x.org })) },
       { key: 'achievementIds', label: 'Honors & activities', type: 'pick', options: (c) => c.achievements.map((a) => ({ id: a.id, label: a.title, sub: a.org })) },
