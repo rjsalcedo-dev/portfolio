@@ -58,6 +58,7 @@ export const api = {
   insights: (days) => request(`/api/track?days=${days}`, { auth: true }),
 
   github: () => request('/api/github'),
+  ping: (url) => request(`/api/ping?url=${encodeURIComponent(url)}`),
 
   endorseInfo: (token) => request(`/api/endorse?token=${encodeURIComponent(token)}`),
   endorseSubmit: (data) => request('/api/endorse', { method: 'POST', body: data }),

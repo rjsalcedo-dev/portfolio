@@ -30,6 +30,11 @@ const sessionId = () => {
   } catch { return undefined; }
 };
 
+// A scan of the printed business card (/?src=card) tags the visit like a share link.
+if (isWeb) {
+  try { if (new URLSearchParams(window.location.search).get('src') === 'card') sessionStorage.setItem(REF_KEY, 'card'); } catch {}
+}
+
 let sentReferrer = false;
 
 export function track(type, data = {}) {

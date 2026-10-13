@@ -48,6 +48,14 @@
         *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
       }
 
+      /* Business card sheet: hidden on screen, shown only when printing /card. */
+      [data-printonly] { display: none; }
+      @media print {
+        [data-printonly] { display: block; }
+        [data-pagebreak] { break-after: page; height: 0; }
+        [data-cardpage] { margin: 0 auto; }
+      }
+
       /* Résumé printing: only the paper, edge to edge, on white. */
       @page { size: A4; margin: 12mm 14mm; }
       @media print {

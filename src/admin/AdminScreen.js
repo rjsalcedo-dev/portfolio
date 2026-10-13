@@ -14,6 +14,7 @@ import { Button, Card, IconButton, T } from '../components/ui';
 import { Field } from '../components/Form';
 import { CiscoQuickAdd, CredlyImport, DataPanel, EndorseRequests, FormPanel, InboxPanel, ListPanel, PanelHeader } from './panels';
 import { InsightsPanel, LinksPanel } from './insights';
+import { refreshShareCards } from './sharecards';
 import { EDUCATION_FIELDS, NOW_FIELDS, PROFILE_FIELDS, SETTINGS_FIELDS } from './schemas';
 import { FONT, RADIUS } from '../theme/tokens';
 
@@ -151,7 +152,9 @@ function Dashboard({ onLogout }) {
     if (!dirty || saving) return;
     setSaving(true);
     try {
-      const { content: saved } = await api.saveContent(finalize(draft));
+      // Redraw link-preview images that changed, then publish everything together.
+      const { content: withCards } = await refreshShareCards(finalize(draft));
+      const { content: saved } = await api.saveContent(withCards);
       const n = normalizeContent(saved);
       setContent(n);
       setDraft(n);
@@ -421,6 +424,7 @@ function Overview({ draft, unread, go, source }) {
         subtitle={source === 'live' ? `Your site was last published ${draft.updatedAt ? relativeTime(draft.updatedAt) : 'never'}.` : 'Showing starter content. Publish once to put it live.'}
         action={(
           <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Button size="sm" variant="secondary" icon="credit-card" title="Business card" href="/card" external align="center" />
             <Button size="sm" variant="secondary" icon="link" title="New share link" onPress={() => go('links')} align="center" />
             <Button size="sm" variant="secondary" icon="file-text" title="Résumé" href="/resume" external align="center" />
           </View>

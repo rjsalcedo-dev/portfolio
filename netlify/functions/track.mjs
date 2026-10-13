@@ -46,7 +46,7 @@ export default async (req, context) => {
   }
 
   const links = await readLinks();
-  const linkLabel = Object.fromEntries(links.map((l) => [l.code, l.label]));
+  const linkLabel = { card: 'Business card', ...Object.fromEntries(links.map((l) => [l.code, l.label])) };
   return json(aggregate(events, days, dayKey, linkLabel, keys.length > MAX_EVENTS));
 };
 

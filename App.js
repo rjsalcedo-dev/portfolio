@@ -15,6 +15,8 @@ import NotFoundScreen from './src/screens/NotFoundScreen';
 import GoScreen from './src/screens/GoScreen';
 import BriefScreen from './src/screens/BriefScreen';
 import EndorseScreen from './src/screens/EndorseScreen';
+import CardScreen from './src/screens/CardScreen';
+import Intro from './src/components/Intro';
 import { SkillSheetProvider } from './src/components/SkillSheet';
 import { track } from './src/lib/track';
 import { FONT } from './src/theme/tokens';
@@ -34,7 +36,7 @@ function Shell() {
   }, [route.name, route.params.slug]);
 
   useEffect(() => {
-    if (Platform.OS !== 'web' || ['project', 'resume', 'brief', 'endorse'].includes(route.name)) return;
+    if (Platform.OS !== 'web' || ['project', 'resume', 'brief', 'endorse', 'card'].includes(route.name)) return;
     document.title = route.name === 'admin' ? 'Admin' : content.settings.siteTitle;
     document.querySelector('meta[name="description"]')?.setAttribute('content', content.settings.siteDescription);
   }, [route.name, content.settings]);
@@ -46,6 +48,7 @@ function Shell() {
   }
   if (route.name === 'go') return <GoScreen code={route.params.code} />;
   if (route.name === 'endorse') return <EndorseScreen token={route.params.token} />;
+  if (route.name === 'card') return <CardScreen />;
   if (!ready) return <View style={{ flex: 1, minHeight: '100vh', backgroundColor: colors.page }} />;
 
   let screen;
@@ -92,6 +95,7 @@ export default function App() {
           <PaletteProvider>
             <SkillSheetProvider>
               <Shell />
+              <Intro />
             </SkillSheetProvider>
           </PaletteProvider>
         </RouterProvider>

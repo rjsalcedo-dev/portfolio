@@ -13,6 +13,7 @@ const ROUTES = [
   { name: 'admin', pattern: /^\/admin\/?$/ },
   { name: 'go', pattern: /^\/r\/([^/]+)\/?$/, keys: ['code'] },
   { name: 'brief', pattern: /^\/brief\/?$/ },
+  { name: 'card', pattern: /^\/card\/?$/ },
   { name: 'endorse', pattern: /^\/endorse\/([^/]+)\/?$/, keys: ['token'] },
 ];
 
