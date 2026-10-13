@@ -1,10 +1,10 @@
 // src/admin/panels.js
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useTheme, useBreakpoint } from '../context/ThemeContext';
 import { Button, Card, T, Tag } from '../components/ui';
-import { Field } from '../components/Form';
+import { Field, Segmented } from '../components/Form';
 import { FieldGroup, MiniButton } from './fields';
 import { COLLECTIONS, NETACAD_COURSES, NETACAD_ISSUER } from './schemas';
 import { api } from '../lib/api';
@@ -334,56 +334,234 @@ export function EndorseRequests({ testimonials, onChange, toast }) {
 // ── Inbox ───────────────────────────────────────────────────────────────────────────
 export function InboxPanel({ onUnread, toast }) {
   const { colors } = useTheme();
+  const { isLg } = useBreakpoint();
   const [items, setItems] = useState(null);
   const [error, setError] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [selectedId, setSelectedId] = useState(null);
 
   const load = useCallback(async () => {
     try {
       const { items: list } = await api.listMessages();
       setItems(list);
       onUnread(list.filter((m) => !m.read).length);
+      setError('');
     } catch (e) { setError(e.message); }
   }, [onUnread]);
   useEffect(() => { load(); }, [load]);
 
-  const setRead = async (m, read) => {
+  const visible = (items || []).filter((m) => filter === 'all' || !m.read);
+  const selected = (items || []).find((m) => m.id === selectedId) || null;
+  const unread = (items || []).filter((m) => !m.read).length;
+
+  // On desktop, show the newest message right away, like Mail.
+  useEffect(() => {
+    if (isLg && !selected && visible.length) setSelectedId(visible[0].id);
+  }, [isLg, selected, visible]);
+
+  const setRead = useCallback(async (m, read) => {
     setItems((list) => list.map((x) => (x.id === m.id ? { ...x, read } : x)));
-    try { await api.updateMessage(m.id, { read }); load(); } catch (e) { toast(e.message, 'error'); }
-  };
+    onUnread((items || []).filter((x) => (x.id === m.id ? !read : !x.read)).length);
+    try { await api.updateMessage(m.id, { read }); } catch (e) { toast(e.message, 'error'); }
+  }, [items, onUnread, toast]);
+
+  const open = useCallback((m) => {
+    setSelectedId(m.id);
+    if (!m.read) setRead(m, true);
+  }, [setRead]);
+
   const remove = async (m) => {
-    if (!window.confirm(`Delete the message from ${m.name}?`)) return;
+    if (!window.confirm(`Delete the message from ${m.name}? This can't be undone.`)) return;
+    const idx = visible.findIndex((x) => x.id === m.id);
+    const nextSel = visible[idx + 1] || visible[idx - 1] || null;
     setItems((list) => list.filter((x) => x.id !== m.id));
-    try { await api.deleteMessage(m.id); load(); } catch (e) { toast(e.message, 'error'); }
+    setSelectedId(isLg && nextSel ? nextSel.id : null);
+    try { await api.deleteMessage(m.id); toast('Message deleted.'); load(); } catch (e) { toast(e.message, 'error'); }
   };
+
+  // ↑ / ↓ move between messages on desktop.
+  useEffect(() => {
+    if (!isLg) return undefined;
+    const onKey = (e) => {
+      if (/INPUT|TEXTAREA/.test(e.target?.tagName) || !visible.length) return;
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      e.preventDefault();
+      const i = Math.max(0, visible.findIndex((x) => x.id === selectedId));
+      const n = visible[Math.min(visible.length - 1, Math.max(0, i + (e.key === 'ArrowDown' ? 1 : -1)))];
+      if (n) open(n);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isLg, visible, selectedId, open]);
+
+  const header = (
+    <PanelHeader
+      title="Inbox"
+      subtitle={items ? `${items.length} message${items.length === 1 ? '' : 's'}${unread ? ` · ${unread} unread` : ''}` : 'Messages sent through your contact form.'}
+      action={(
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Segmented options={[{ value: 'all', label: 'All' }, { value: 'unread', label: `Unread${unread ? ` (${unread})` : ''}` }]} value={filter} onChange={setFilter} />
+          <ToolbarButton icon="refresh-cw" label="Refresh" onPress={load} />
+        </View>
+      )}
+    />
+  );
+
+  if (error) return <View>{header}<Card><T variant="small" style={{ color: colors.danger }}>{error}</T></Card></View>;
+  if (!items) return <View>{header}<View style={{ paddingVertical: 60 }}><ActivityIndicator color={colors.text2} /></View></View>;
+  if (!items.length) {
+    return (
+      <View>
+        {header}
+        <Card>
+          <View style={{ alignItems: 'center', paddingVertical: 56, gap: 10 }}>
+            <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' }}><Feather name="inbox" size={24} color={colors.text3} /></View>
+            <T variant="h3">No messages yet</T>
+            <T variant="small" color="secondary" align="center">Messages from your contact form will appear here.</T>
+          </View>
+        </Card>
+      </View>
+    );
+  }
+
+  const list = (
+    <View style={{ width: isLg ? 340 : '100%', borderRightWidth: isLg ? 1 : 0, borderRightColor: colors.border }}>
+      {visible.length === 0 ? (
+        <View style={{ padding: 28, alignItems: 'center' }}><T variant="small" color="secondary">You're all caught up.</T></View>
+      ) : (
+        <ScrollView style={{ maxHeight: isLg ? 'calc(100vh - 230px)' : undefined }}>
+          {visible.map((m, i) => <MessageRow key={m.id} m={m} active={isLg && m.id === selectedId} first={i === 0} onPress={() => open(m)} />)}
+        </ScrollView>
+      )}
+    </View>
+  );
+
+  const pane = selected ? (
+    <MessagePane
+      m={selected}
+      onBack={isLg ? null : () => setSelectedId(null)}
+      onToggleRead={() => setRead(selected, !selected.read)}
+      onDelete={() => remove(selected)}
+    />
+  ) : (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40, gap: 8 }}>
+      <Feather name="mail" size={28} color={colors.text3} />
+      <T variant="small" color="secondary">Select a message to read it.</T>
+    </View>
+  );
 
   return (
     <View>
-      <PanelHeader title="Inbox" subtitle="Messages sent through the contact form." action={<Button align="center" size="sm" variant="secondary" icon="refresh-cw" title="Refresh" onPress={load} />} />
-      {error ? <T variant="small" style={{ color: colors.danger }}>{error}</T> : null}
-      {!items && !error ? <ActivityIndicator color={colors.text2} /> : null}
-      {items && items.length === 0 ? (
-        <Card><View style={{ alignItems: 'center', paddingVertical: 32, gap: 8 }}><Feather name="inbox" size={28} color={colors.text3} /><T variant="body" color="secondary">No messages yet.</T></View></Card>
-      ) : null}
-      <View style={{ gap: 12 }}>
-        {(items || []).map((m) => (
-          <Card key={m.id} style={{ borderLeftWidth: m.read ? 0 : 3, borderLeftColor: colors.accent }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-              <View style={{ flexShrink: 1 }}>
-                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                  <T variant="body" weight="600">{m.name}</T>
-                  {!m.read ? <Tag tone="accent">New</Tag> : null}
-                </View>
-                <T variant="small" color="secondary">{m.email} · {relativeTime(m.createdAt)}{m.country ? ` · ${m.country}` : ''}</T>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 6 }}>
-                <Button align="center" size="sm" icon="corner-up-left" title="Reply" href={`mailto:${m.email}?subject=${encodeURIComponent('Re: your message')}`} onPress={() => !m.read && setRead(m, true)} />
-                <Button align="center" size="sm" variant="secondary" title={m.read ? 'Mark unread' : 'Mark read'} onPress={() => setRead(m, !m.read)} />
-                <MiniButton icon="trash-2" label="Delete" danger onPress={() => remove(m)} />
-              </View>
+      {header}
+      <Card padded={false}>
+        {isLg ? (
+          <View style={{ flexDirection: 'row', minHeight: 'min(640px, calc(100vh - 230px))' }}>
+            {list}
+            <View style={{ flex: 1, minWidth: 0 }}>{pane}</View>
+          </View>
+        ) : selected ? pane : list}
+      </Card>
+      {isLg ? <T variant="caption" color="tertiary" style={{ marginTop: 12 }}>Tip: ↑ and ↓ move between messages. Reply opens your email app.</T> : null}
+    </View>
+  );
+}
+
+const initialsOf = (name) => String(name || '?').trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+
+function Avatar({ name, size = 36, highlight }) {
+  const { colors } = useTheme();
+  return (
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: highlight ? colors.accentSoft : colors.surfaceMuted, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ fontFamily: FONT, fontSize: size * 0.38, fontWeight: '600', color: highlight ? colors.accentText : colors.text2 }}>{initialsOf(name)}</Text>
+    </View>
+  );
+}
+
+const shortTime = (iso) => {
+  const d = new Date(iso);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  if (now - d < 6 * 864e5) return d.toLocaleDateString(undefined, { weekday: 'short' });
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+};
+
+function MessageRow({ m, active, first, onPress }) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${m.read ? '' : 'Unread. '}${m.name}: ${m.message.slice(0, 80)}`}
+      style={({ hovered }) => ({
+        flexDirection: 'row', gap: 12, paddingVertical: 14, paddingLeft: 10, paddingRight: 16,
+        borderTopWidth: first ? 0 : 1, borderTopColor: colors.border,
+        backgroundColor: active ? colors.accentSoft : hovered ? colors.surfaceMuted : 'transparent', cursor: 'pointer',
+      })}
+    >
+      <View style={{ width: 8, alignItems: 'center', paddingTop: 14 }}>
+        {!m.read ? <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent }} /> : null}
+      </View>
+      <Avatar name={m.name} highlight={!m.read} />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+          <Text numberOfLines={1} style={{ flex: 1, fontFamily: FONT, fontSize: 15, fontWeight: m.read ? '500' : '700', color: colors.text }}>{m.name}</Text>
+          <Text style={{ fontFamily: FONT, fontSize: 12, color: !m.read ? colors.accentText : colors.text3, fontVariant: ['tabular-nums'] }}>{shortTime(m.createdAt)}</Text>
+        </View>
+        <Text numberOfLines={2} style={{ fontFamily: FONT, fontSize: 13, lineHeight: 18, color: colors.text2, marginTop: 3 }}>{m.message}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+// 34pt round toolbar button, matching the height of the small pill buttons beside it.
+function ToolbarButton({ icon, label, onPress, danger }) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ hovered, pressed }) => ({
+        width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center',
+        backgroundColor: hovered ? (danger ? colors.dangerSoft : colors.border) : colors.surfaceMuted,
+        opacity: pressed ? 0.7 : 1, cursor: 'pointer', transitionProperty: 'background-color', transitionDuration: '150ms',
+      })}
+    >
+      <Feather name={icon} size={15} color={danger ? colors.danger : colors.text} />
+    </Pressable>
+  );
+}
+
+function MessagePane({ m, onBack, onToggleRead, onDelete }) {
+  const { colors } = useTheme();
+  const { isSm } = useBreakpoint();
+  const when = new Date(m.createdAt).toLocaleString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const reply = `mailto:${m.email}?subject=${encodeURIComponent('Re: your message on my portfolio')}&body=${encodeURIComponent(`\n\n---\nOn ${when}, ${m.name} wrote:\n> ${m.message.replace(/\n/g, '\n> ')}`)}`;
+  return (
+    <View style={{ flex: 1 }}>
+      {/* Toolbar: every control is 34pt and centered on one line. */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: isSm ? 12 : 20, height: 56, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+        {onBack ? <Button align="center" size="sm" variant="link" icon="chevron-left" title="Inbox" onPress={onBack} /> : null}
+        <View style={{ flex: 1 }} />
+        <Button align="center" size="sm" icon="corner-up-left" title="Reply" href={reply} external />
+        <Button align="center" size="sm" variant="secondary" icon={m.read ? 'mail' : 'check'} title={isSm ? '' : m.read ? 'Mark unread' : 'Mark read'} accessibilityLabel={m.read ? 'Mark unread' : 'Mark read'} onPress={onToggleRead} />
+        <ToolbarButton icon="trash-2" label="Delete" danger onPress={onDelete} />
+      </View>
+
+      <View style={{ padding: isSm ? 20 : 32, maxWidth: 720 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <Avatar name={m.name} size={48} highlight />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <T variant="h3" numberOfLines={1}>{m.name}</T>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+              <Button variant="link" size="sm" title={m.email} href={`mailto:${m.email}`} external />
+              {m.country ? <Text style={{ fontFamily: FONT, fontSize: 13, color: colors.text3 }}>· {m.country}</Text> : null}
             </View>
-            <T variant="body" style={{ marginTop: 14 }} selectable>{m.message}</T>
-          </Card>
-        ))}
+          </View>
+        </View>
+        <Text style={{ fontFamily: FONT, fontSize: 12, color: colors.text3, marginTop: 18 }}>{when}</Text>
+        <View style={{ height: 1, backgroundColor: colors.border, marginVertical: 18 }} />
+        <Text selectable style={{ fontFamily: FONT, fontSize: 16, lineHeight: 26, color: colors.text, whiteSpace: 'pre-wrap' }}>{m.message}</Text>
       </View>
     </View>
   );
