@@ -57,3 +57,14 @@ export const shortUrl = (url) => {
 
 // While typing: lowercase and swap anything else for "-", but keep dashes so typing works.
 export const cleanSlug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').slice(0, 60);
+
+// The availability details a recruiter filters on, as [icon, text] pairs; blank ones are left out.
+export function availabilityParts(profile) {
+  const a = profile?.availability || {};
+  const start = toDate(a.start);
+  return [
+    start && ['calendar', start > new Date() ? `Can start ${formatMonth(a.start)}` : 'Can start now'],
+    a.hours && ['clock', /ojt|intern/i.test(a.hours) ? a.hours : `${a.hours} OJT`],
+    a.setup && ['map-pin', a.setup],
+  ].filter(Boolean);
+}

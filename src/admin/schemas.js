@@ -16,6 +16,7 @@ export const PROFILE_FIELDS = [
   { key: 'headline', label: 'Headline', hint: 'the big line at the top' },
   { key: 'intro', label: 'Intro', type: 'textarea', rows: 3 },
   { row: [{ key: 'status.open', label: 'Available for work', type: 'toggle', hint: 'Green pulsing dot' }, { key: 'status.label', label: 'Availability text', placeholder: 'Open to internships & OJT' }] },
+  { row: [{ key: 'availability.start', label: 'Can start', type: 'month', hint: 'optional' }, { key: 'availability.hours', label: 'OJT hours', placeholder: '486 hours', hint: 'optional' }, { key: 'availability.setup', label: 'Work setup', placeholder: 'On-site in Baguio or remote', hint: 'optional', flex: 2 }] },
   { section: 'About' },
   { key: 'about', label: 'About', type: 'textarea', rows: 7, hint: 'blank line = new paragraph' },
   { row: [{ key: 'location', label: 'Location' }, { key: 'email', label: 'Public email', hint: 'leave blank to hide', autoCapitalize: 'none' }] },
@@ -38,6 +39,13 @@ export const EDUCATION_FIELDS = [
 export const NOW_FIELDS = [
   { key: 'updated', label: 'Last updated', type: 'month', hint: 'shown as a badge' },
   { key: 'items', label: 'Items', type: 'list', newItem: () => ({ label: '', text: '' }), fields: [{ key: 'label', label: 'Label' }, { key: 'text', label: 'Text', flex: 3 }] },
+];
+
+export const PRINCIPLES_FIELDS = [
+  {
+    key: 'items', label: 'Habits', type: 'list', newItem: () => ({ id: uid('w'), icon: 'check', title: '', text: '' }),
+    fields: [{ key: 'title', label: 'Title', placeholder: 'I ship whole products' }, { key: 'text', label: 'Proof', type: 'textarea', rows: 2, flex: 3 }, { key: 'icon', label: 'Icon', hint: 'Feather icon name' }],
+  },
 ];
 
 export const SETTINGS_FIELDS = [

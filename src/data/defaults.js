@@ -19,6 +19,8 @@ export const DEFAULT_CONTENT = {
     email: '',
     avatar: '',
     status: { open: true, label: 'Open to internships & OJT' },
+    // Shown beside the status in the hero and on the brief. Leave a field blank to hide it.
+    availability: { start: '', hours: '', setup: '' },
     socials: [
       { label: 'GitHub', url: 'https://github.com/rjsalcedo-dev', icon: 'github' },
     ],
@@ -153,6 +155,13 @@ export const DEFAULT_CONTENT = {
   // Honors, awards, org roles, hackathons, seminars.
   achievements: [],
 
+  // "How I work": a few working habits backed by real projects.
+  principles: [
+    { id: 'w-ship', icon: 'package', title: 'I ship whole products', text: 'Design, build, backend and release. Nuvix+ runs on five platforms from one codebase I built and maintain solo.' },
+    { id: 'w-users', icon: 'users', title: 'I build for real people', text: 'I start from a real problem: Agri-Aid is an AI assistant for Filipino farmers, and SRLAAS was built for DepEd SDO Benguet.' },
+    { id: 'w-learn', icon: 'trending-up', title: 'I learn fast, in the open', text: 'New stack, new platform or networking through Cisco NetAcad: I pick it up by building, and the code is on GitHub.' },
+  ],
+
   // Quotes from professors, supervisors, clients or teammates.
   testimonials: [],
 
@@ -227,13 +236,14 @@ export function normalizeContent(raw) {
   return {
     ...d,
     ...c,
-    profile: { ...d.profile, ...(c.profile || {}), status: { ...d.profile.status, ...(c.profile?.status || {}) }, socials: arr(c.profile?.socials, d.profile.socials).filter((s) => s?.url).map(fixSocial) },
+    profile: { ...d.profile, ...(c.profile || {}), status: { ...d.profile.status, ...(c.profile?.status || {}) }, availability: { ...d.profile.availability, ...(c.profile?.availability || {}) }, socials: arr(c.profile?.socials, d.profile.socials).filter((s) => s?.url).map(fixSocial) },
     education: { ...d.education, ...(c.education || {}) },
     now: { ...d.now, ...(c.now || {}), items: arr(c.now?.items, d.now.items) },
     projects: arr(c.projects, d.projects).map((p) => ({ stack: [], highlights: [], gallery: [], metrics: [], links: {}, ...p, links: { ...(p.links || {}) } })),
     credentials: arr(c.credentials, d.credentials).map((x) => ({ skills: [], credentialId: '', file: '', ...x })),
     experience: arr(c.experience, d.experience).map((x) => ({ bullets: [], ...x })),
     achievements: arr(c.achievements, d.achievements),
+    principles: arr(c.principles, d.principles),
     testimonials: arr(c.testimonials, d.testimonials),
     skills: arr(c.skills, d.skills).map((x) => ({ items: [], ...x })),
     resumes: arr(c.resumes, d.resumes).map((r) => ({ projectIds: [], credentialIds: [], experienceIds: [], achievementIds: [], skillIds: [], showQr: true, showPhoto: true, ...r })),

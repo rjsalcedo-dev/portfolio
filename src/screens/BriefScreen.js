@@ -5,10 +5,10 @@ import { Image, Platform, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useTheme, useBreakpoint } from '../context/ThemeContext';
 import { useContent } from '../context/ContentContext';
-import { formatMonth, progressBetween, shortUrl, toDate } from '../lib/format';
+import { availabilityParts, formatMonth, progressBetween, shortUrl, toDate } from '../lib/format';
 import { downloadVCard, qrDataUrl, siteUrl } from '../lib/share';
 import { track } from '../lib/track';
-import { Button, Card, Container, Divider, StatusDot, T } from '../components/ui';
+import { Button, Card, Container, Divider, Icon, StatusDot, T } from '../components/ui';
 import { ProgressBar } from '../components/Cards';
 import { SkillChip } from '../components/SkillSheet';
 import { LocalTime } from './home/Extras';
@@ -61,6 +61,16 @@ export default function BriefScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
                   <StatusDot color={profile.status.open ? colors.success : colors.text3} pulse={profile.status.open} />
                   <T variant="small" weight="600">{profile.status.label}</T>
+                </View>
+              ) : null}
+              {availabilityParts(profile).length ? (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: 14, rowGap: 6, marginTop: 8 }}>
+                  {availabilityParts(profile).map(([icon, text]) => (
+                    <View key={icon} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Icon name={icon} size={14} color="secondary" />
+                      <T variant="small" color="secondary">{text}</T>
+                    </View>
+                  ))}
                 </View>
               ) : null}
             </View>

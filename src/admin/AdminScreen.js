@@ -16,7 +16,7 @@ import { ProgressBar } from '../components/Cards';
 import { CiscoQuickAdd, CredlyImport, DataPanel, EndorseRequests, FormPanel, InboxPanel, ListPanel, PanelHeader } from './panels';
 import { InsightsPanel, LinksPanel } from './insights';
 import { refreshShareCards } from './sharecards';
-import { EDUCATION_FIELDS, NOW_FIELDS, PROFILE_FIELDS, SETTINGS_FIELDS } from './schemas';
+import { EDUCATION_FIELDS, NOW_FIELDS, PRINCIPLES_FIELDS, PROFILE_FIELDS, SETTINGS_FIELDS } from './schemas';
 import { FONT, RADIUS } from '../theme/tokens';
 
 const isWeb = Platform.OS === 'web';
@@ -200,6 +200,7 @@ function Dashboard({ onLogout }) {
       case 'insights': return <InsightsPanel content={draft} go={go} />;
       case 'links': return <LinksPanel content={draft} toast={toast} />;
       case 'profile': return <FormPanel title="Profile" subtitle="Your name, story, photo and links." fields={PROFILE_FIELDS} value={draft.profile} onChange={set('profile')} />;
+      case 'principles': return <FormPanel title="How I work" subtitle="Two to four working habits, each backed by something real. Empty hides the section." fields={PRINCIPLES_FIELDS} value={{ items: draft.principles }} onChange={(v) => set('principles')(v.items)} />;
       case 'now': return <FormPanel title="Now" subtitle="What you're focused on right now. Keep it fresh: it shows when it was last updated." fields={NOW_FIELDS} value={draft.now} onChange={set('now')} />;
       case 'education': return <FormPanel title="Education" subtitle="The progress bar on your site is calculated from these dates." fields={EDUCATION_FIELDS} value={draft.education} onChange={set('education')} />;
       case 'projects': return <ListPanel name="projects" items={draft.projects} onChange={set('projects')} content={draft} />;
@@ -290,6 +291,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'profile', label: 'Profile', icon: 'user' },
       { id: 'now', label: 'Now', icon: 'clock' },
+      { id: 'principles', label: 'How I work', icon: 'compass' },
       { id: 'projects', label: 'Projects', icon: 'box' },
       { id: 'credentials', label: 'Credentials', icon: 'award' },
       { id: 'experience', label: 'Experience', icon: 'briefcase' },

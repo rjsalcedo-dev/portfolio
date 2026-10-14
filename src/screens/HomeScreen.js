@@ -5,7 +5,7 @@ import { useTheme, useBreakpoint } from '../context/ThemeContext';
 import { useContent } from '../context/ContentContext';
 import { useRouter, scrollToId } from '../lib/router';
 import { api } from '../lib/api';
-import { formatMonth, formatRange, progressBetween, toDate } from '../lib/format';
+import { availabilityParts, formatMonth, formatRange, progressBetween, toDate } from '../lib/format';
 import { Button, Card, Chips, Container, Divider, Icon, Reveal, Section, Stack, StatusDot, T, Tag } from '../components/ui';
 import { CredentialCard, Grid, ProgressBar, ProjectCard } from '../components/Cards';
 import { Field } from '../components/Form';
@@ -36,6 +36,7 @@ export default function HomeScreen() {
       {[
         content.now.items.length ? ['now', Now] : null,
         ['work', Work],
+        content.principles.some((p) => p.title?.trim()) ? ['how', HowIWork] : null,
         githubWorthShowing(github) ? ['activity', GithubActivity] : null,
         content.credentials.some((c) => !c.hidden) ? ['credentials', Credentials] : null,
         content.testimonials.some((t) => !t.hidden) ? ['testimonials', Testimonials] : null,
@@ -53,6 +54,7 @@ function Hero() {
   const { bp, isSm } = useBreakpoint();
   const { content } = useContent();
   const { profile, projects, credentials, education } = content;
+  const availability = availabilityParts(profile);
 
   const monthsLeft = useMemo(() => {
     const end = toDate(education.end);
@@ -71,10 +73,20 @@ function Hero() {
     <View style={{ backgroundColor: colors.page, paddingTop: isSm ? SPACE[10] : bp === 'md' ? SPACE[12] : SPACE[14], paddingBottom: isSm ? SPACE[10] : SPACE[12] }}>
       <Container>
         <Reveal>
-          {profile.status?.label ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', paddingHorizontal: 12, height: 30, borderRadius: 999, backgroundColor: colors.surfaceMuted, marginBottom: SPACE[7] }}>
-              <StatusDot color={profile.status.open ? colors.success : colors.text3} pulse={profile.status.open} />
-              <Text style={{ fontFamily: FONT, fontSize: 13, fontWeight: '500', color: colors.text }}>{profile.status.label}</Text>
+          {profile.status?.label || availability.length ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 8, marginBottom: SPACE[7] }}>
+              {profile.status?.label ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, height: 30, borderRadius: 999, backgroundColor: colors.surfaceMuted }}>
+                  <StatusDot color={profile.status.open ? colors.success : colors.text3} pulse={profile.status.open} />
+                  <Text style={{ fontFamily: FONT, fontSize: 13, fontWeight: '500', color: colors.text }}>{profile.status.label}</Text>
+                </View>
+              ) : null}
+              {availability.map(([icon, text]) => (
+                <View key={icon} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Icon name={icon} size={14} color="secondary" />
+                  <Text style={{ fontFamily: FONT, fontSize: 13, color: colors.text2 }}>{text}</Text>
+                </View>
+              ))}
             </View>
           ) : null}
           {/* Read order: photo and role → name (the largest type on the page) → headline as a tagline → intro. */}
@@ -109,6 +121,30 @@ function Hero() {
         </Reveal>
       </Container>
     </View>
+  );
+}
+
+// ── How I work ───────────────────────────────────────────────────────────────────────
+function HowIWork({ alt }) {
+  const { colors } = useTheme();
+  const { bp } = useBreakpoint();
+  const items = useContent().content.principles.filter((p) => p.title?.trim());
+  return (
+    <Section id="how" alt={alt} eyebrow="How I work" title="What you can expect from me.">
+      <Grid columns={bp === 'sm' ? 1 : Math.min(3, items.length)}>
+        {items.map((p, i) => (
+          <Reveal key={p.id || i} delay={i * 80} style={{ flex: 1 }}>
+            <Card style={{ flex: 1 }}>
+              <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: SPACE[5] }}>
+                <Icon name={p.icon || 'check'} size={20} color="accent" />
+              </View>
+              <T variant="h3">{p.title}</T>
+              {p.text ? <T variant="body" color="secondary" style={{ marginTop: SPACE[2] }}>{p.text}</T> : null}
+            </Card>
+          </Reveal>
+        ))}
+      </Grid>
+    </Section>
   );
 }
 
