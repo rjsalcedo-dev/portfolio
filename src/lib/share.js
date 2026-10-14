@@ -3,6 +3,7 @@
 import { Platform } from 'react-native';
 import qrcode from 'qrcode-generator';
 import { formatMonth, formatRange, shortUrl, toDate } from './format';
+import { showAchievement } from '../data/defaults';
 
 export const siteUrl = (path = '/') => (Platform.OS === 'web' ? `${window.location.origin}${path}` : path);
 
@@ -70,7 +71,7 @@ export function resumeText(content, resume) {
       (p.highlights || []).slice(0, 3).forEach((b) => out.push(`- ${b}`));
     });
   }
-  const ach = pick(content.achievements, resume.achievementIds);
+  const ach = pick(content.achievements, resume.achievementIds).filter(showAchievement);
   if (ach.length) { h('Honors & Activities'); ach.forEach((a) => out.push(`${a.title}${a.org ? `, ${a.org}` : ''}${a.date ? ` | ${formatMonth(a.date)}` : ''}`)); }
   const creds = pick(content.credentials, resume.credentialIds);
   if (creds.length) { h('Certifications'); creds.forEach((c) => out.push(`${c.title} | ${c.issuer}${c.issued ? ` | ${formatMonth(c.issued)}` : ''}`)); }

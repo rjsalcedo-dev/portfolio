@@ -13,6 +13,7 @@ import { Segmented } from '../components/Form';
 import { FONT, SPACE } from '../theme/tokens';
 import { qrDataUrl, resumeText, siteUrl } from '../lib/share';
 import { track } from '../lib/track';
+import { showAchievement } from '../data/defaults';
 
 const isWeb = Platform.OS === 'web';
 // The paper is always black on white, whatever the site theme, so it prints exactly as seen.
@@ -84,7 +85,7 @@ export default function ResumeScreen({ version }) {
   const projects = pick(content.projects, resume.projectIds);
   const credentials = pick(content.credentials, resume.credentialIds);
   const experience = pick(content.experience, resume.experienceIds);
-  const achievements = pick(content.achievements, resume.achievementIds);
+  const achievements = pick(content.achievements, resume.achievementIds).filter(showAchievement);
   const skills = pick(content.skills, resume.skillIds);
   const site = isWeb ? window.location.host : '';
   const contact = [profile.location, profile.email, site, ...profile.socials.map((s) => shortUrl(s.url))].filter(Boolean);

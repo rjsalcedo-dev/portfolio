@@ -113,7 +113,7 @@ export const COLLECTIONS = {
     singular: 'entry',
     label: (a) => a.title || 'Untitled',
     sub: (a) => [a.org, a.date, a.hidden ? 'Hidden' : ''].filter(Boolean).join(' · '),
-    newItem: () => ({ id: uid('a'), title: 'New entry', type: 'award', org: '', date: '', description: '', link: '', hidden: false }),
+    newItem: () => ({ id: uid('a'), title: '', type: 'award', org: '', date: '', description: '', link: '', hidden: false }),
     fields: [
       { key: 'title', label: 'Title', placeholder: "Dean's Lister, 1st Semester" },
       { key: 'type', label: 'Type', type: 'select', options: [{ value: 'award', label: 'Award' }, { value: 'competition', label: 'Competition' }, { value: 'leadership', label: 'Leadership' }, { value: 'event', label: 'Seminar' }, { value: 'volunteer', label: 'Volunteer' }] },

@@ -15,6 +15,7 @@ import { Activity, githubWorthShowing, LocalTime, RoleFit, useGithub } from './h
 import { downloadVCard } from '../lib/share';
 import { track } from '../lib/track';
 import { FONT, RADIUS, SPACE } from '../theme/tokens';
+import { showAchievement } from '../data/defaults';
 
 export default function HomeScreen() {
   const { content } = useContent();
@@ -240,7 +241,7 @@ function About({ alt }) {
   const { bp, isSm } = useBreakpoint();
   const { content } = useContent();
   const { profile, education, experience, skills } = content;
-  const achievements = content.achievements.filter((a) => !a.hidden);
+  const achievements = content.achievements.filter(showAchievement);
   const progress = progressBetween(education.start, education.end);
   const done = progress >= 1;
   const startYear = toDate(education.start)?.getFullYear();

@@ -210,6 +210,15 @@ const fixSocial = (s) => {
   return { ...s, url, label: s.label?.trim() || LINK_LABELS[s.icon] || host || 'Link' };
 };
 
+// An honor/activity worth showing: hidden ones, untitled ones and the admin's untouched
+// "New entry" placeholder stay off the site, and the section disappears when none are left.
+export const showAchievement = (a) => {
+  if (!a || a.hidden) return false;
+  const title = String(a.title || '').trim();
+  if (!title) return false;
+  return title !== 'New entry' || !!(a.org || a.date || a.description || a.link);
+};
+
 // Fills any missing keys from the defaults so older saved content never crashes newer code.
 export function normalizeContent(raw) {
   const d = DEFAULT_CONTENT;
