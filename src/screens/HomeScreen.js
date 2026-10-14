@@ -70,17 +70,23 @@ function Hero() {
     <View style={{ backgroundColor: colors.page, paddingTop: isSm ? SPACE[10] : bp === 'md' ? SPACE[12] : SPACE[14], paddingBottom: isSm ? SPACE[10] : SPACE[12] }}>
       <Container>
         <Reveal>
-          {profile.avatar ? (
-            <Image source={{ uri: profile.avatar }} style={{ width: isSm ? 72 : 88, height: isSm ? 72 : 88, borderRadius: 999, marginBottom: SPACE[6], backgroundColor: colors.surfaceMuted }} accessibilityLabel={profile.name} />
-          ) : null}
           {profile.status?.label ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', paddingHorizontal: 12, height: 30, borderRadius: 999, backgroundColor: colors.surfaceMuted, marginBottom: SPACE[6] }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', paddingHorizontal: 12, height: 30, borderRadius: 999, backgroundColor: colors.surfaceMuted, marginBottom: SPACE[7] }}>
               <StatusDot color={profile.status.open ? colors.success : colors.text3} pulse={profile.status.open} />
               <Text style={{ fontFamily: FONT, fontSize: 13, fontWeight: '500', color: colors.text }}>{profile.status.label}</Text>
             </View>
           ) : null}
-          <T variant="eyebrow" color="secondary" style={{ marginBottom: SPACE[3] }}>{profile.name} · {profile.role}</T>
-          <T variant="hero" accessibilityRole="header" aria-level={1} style={{ maxWidth: 900 }}>{profile.headline}</T>
+          {/* Who: photo, name and role read as one unit, so the name is the first thing you see. */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: isSm ? 14 : 18, marginBottom: isSm ? SPACE[6] : SPACE[7] }}>
+            {profile.avatar ? (
+              <Image source={{ uri: profile.avatar }} style={{ width: isSm ? 60 : 76, height: isSm ? 60 : 76, borderRadius: 999, backgroundColor: colors.surfaceMuted, boxShadow: `0 0 0 1px ${colors.border}` }} accessibilityLabel={profile.name} />
+            ) : null}
+            <View style={{ flexShrink: 1 }}>
+              <Text accessibilityRole="header" aria-level={1} style={{ fontFamily: FONT, fontSize: isSm ? 26 : bp === 'md' ? 32 : 36, lineHeight: isSm ? 30 : bp === 'md' ? 36 : 40, fontWeight: '700', letterSpacing: isSm ? -0.4 : -0.7, color: colors.text }}>{profile.name}</Text>
+              <T variant="body" color="secondary" style={{ marginTop: 2 }}>{profile.role}</T>
+            </View>
+          </View>
+          <T variant="hero" style={{ maxWidth: 900 }}>{profile.headline}</T>
           <T variant="lead" color="secondary" style={{ marginTop: SPACE[6], maxWidth: 680 }}>{profile.intro}</T>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACE[3], marginTop: SPACE[8] }}>
             <Button title="View my work" href="/#work" size={isSm ? 'md' : 'lg'} />
