@@ -210,6 +210,8 @@ const LINK_LABELS = { github: 'GitHub', linkedin: 'LinkedIn', globe: 'Website', 
 const withScheme = (url) => {
   const u = String(url || '').trim();
   if (!u || /^([a-z][a-z0-9+.-]*:|\/|#)/i.test(u)) return u;
+  // A bare address ("you@gmail.com") becomes a mail link.
+  if (/^[^\s@/]+@[^\s@/]+\.[a-z]{2,}$/i.test(u)) return `mailto:${u}`;
   return /^[^\s/]+\.[a-z]{2,}(\/|$)/i.test(u) ? `https://${u}` : u;
 };
 const fixSocial = (s) => {

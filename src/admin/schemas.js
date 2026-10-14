@@ -23,7 +23,7 @@ export const PROFILE_FIELDS = [
   { section: 'Links', description: 'Shown in Contact, the footer, the résumé and your business card.' },
   {
     key: 'socials', label: 'Links', type: 'list', newItem: () => ({ label: '', url: '', icon: 'link' }),
-    fields: [{ key: 'label', label: 'Label' }, { key: 'url', label: 'URL', type: 'url', flex: 2 }, { key: 'icon', label: 'Icon', type: 'select', options: ICONS, flex: 3 }],
+    fields: [{ key: 'label', label: 'Label' }, { key: 'url', label: 'URL or email', type: 'url', flex: 2, placeholder: 'https:// or you@gmail.com' }, { key: 'icon', label: 'Icon', type: 'select', options: ICONS, flex: 3 }],
   },
 ];
 

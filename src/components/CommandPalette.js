@@ -10,6 +10,7 @@ import { useRouter } from '../lib/router';
 import { FONT, RADIUS, SPACE } from '../theme/tokens';
 import { downloadVCard } from '../lib/share';
 import { track } from '../lib/track';
+import { shortUrl } from '../lib/format';
 
 const PaletteContext = createContext({ open: () => {} });
 export const usePalette = () => useContext(PaletteContext);
@@ -61,7 +62,7 @@ function useCommands() {
       ...content.resumes.map((r, i) => ({ group: 'Résumé', icon: 'file-text', label: `Résumé${content.resumes.length > 1 ? ` · ${r.name}` : ''}`, hint: r.headline, run: go(i === 0 ? '/resume' : `/resume/${r.slug || r.id}`) })),
       ...content.projects.map((p) => ({ group: 'Projects', icon: 'box', label: p.title, hint: p.tagline, keywords: (p.stack || []).join(' '), run: go(`/projects/${p.slug}`) })),
       ...content.credentials.filter((c) => !c.hidden).map((c) => ({ group: 'Credentials', icon: 'check-circle', label: c.title, hint: c.issuer, keywords: (c.skills || []).join(' '), run: c.verifyUrl ? ext(c.verifyUrl) : c.file ? ext(c.file) : go('/#credentials') })),
-      ...content.profile.socials.map((s) => ({ group: 'Links', icon: s.icon || 'link', label: s.label, hint: s.url.replace(/^https?:\/\//, ''), run: ext(s.url) })),
+      ...content.profile.socials.map((s) => ({ group: 'Links', icon: s.icon || 'link', label: s.label, hint: shortUrl(s.url), run: ext(s.url) })),
       { group: 'Actions', icon: 'sun', label: 'Appearance: Light', hint: preference === 'light' ? 'Current' : '', run: () => setPreference('light') },
       { group: 'Actions', icon: 'moon', label: 'Appearance: Dark', hint: preference === 'dark' ? 'Current' : '', run: () => setPreference('dark') },
       { group: 'Actions', icon: 'monitor', label: 'Appearance: Match system', hint: preference === 'system' ? 'Current' : '', run: () => setPreference('system') },

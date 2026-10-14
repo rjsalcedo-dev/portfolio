@@ -5,7 +5,7 @@ import { useTheme, useBreakpoint } from '../context/ThemeContext';
 import { useContent } from '../context/ContentContext';
 import { useRouter, scrollToId } from '../lib/router';
 import { api } from '../lib/api';
-import { availabilityParts, formatMonth, formatRange, progressBetween, toDate } from '../lib/format';
+import { availabilityParts, formatMonth, formatRange, progressBetween, shortUrl, toDate } from '../lib/format';
 import { Button, Card, Chips, Container, Divider, Icon, Reveal, Section, Stack, StatusDot, T, Tag } from '../components/ui';
 import { CredentialCard, Grid, ProgressBar, ProjectCard } from '../components/Cards';
 import { Field } from '../components/Form';
@@ -53,118 +53,102 @@ function Hero() {
   const { colors } = useTheme();
   const { bp, isSm } = useBreakpoint();
   const { content } = useContent();
-  const { profile, projects, credentials, education } = content;
+  const { profile } = content;
   const availability = availabilityParts(profile);
+  const side = !isSm && !!profile.avatar;
+  const photo = bp === 'lg' ? 380 : 260;
 
-  const monthsLeft = useMemo(() => {
-    const end = toDate(education.end);
-    if (!end) return null;
-    const now = new Date();
-    return (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth());
-  }, [education.end]);
-
-  const stats = [
-    { value: projects.length, label: projects.length === 1 ? 'Project shipped' : 'Projects built' },
-    credentials.length ? { value: credentials.length, label: 'Verified credentials' } : null,
-    monthsLeft != null && monthsLeft > 0 ? { value: monthsLeft, label: `Months to graduation` } : { value: formatMonth(education.end).split(' ')[1] || '—', label: 'Graduated' },
-  ].filter(Boolean);
-
-  return (
-    <View style={{ backgroundColor: colors.page, paddingTop: isSm ? SPACE[10] : bp === 'md' ? SPACE[12] : SPACE[14], paddingBottom: isSm ? SPACE[10] : SPACE[12] }}>
-      <Container>
-        <Reveal>
-          {profile.status?.label || availability.length ? (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 8, marginBottom: SPACE[7] }}>
-              {profile.status?.label ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, height: 30, borderRadius: 999, backgroundColor: colors.surfaceMuted }}>
-                  <StatusDot color={profile.status.open ? colors.success : colors.text3} pulse={profile.status.open} />
-                  <Text style={{ fontFamily: FONT, fontSize: 13, fontWeight: '500', color: colors.text }}>{profile.status.label}</Text>
-                </View>
-              ) : null}
-              {availability.map(([icon, text]) => (
-                <View key={icon} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Icon name={icon} size={14} color="secondary" />
-                  <Text style={{ fontFamily: FONT, fontSize: 13, color: colors.text2 }}>{text}</Text>
-                </View>
-              ))}
+  // Read order: availability → name (the largest type on the page) → role → headline → intro → actions.
+  const text = (
+    <View style={{ flex: 1, minWidth: 0 }}>
+      {profile.status?.label || availability.length ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 8, marginBottom: isSm ? SPACE[6] : SPACE[7] }}>
+          {profile.status?.label ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, height: 30, borderRadius: 999, backgroundColor: colors.surfaceMuted }}>
+              <StatusDot color={profile.status.open ? colors.success : colors.text3} pulse={profile.status.open} />
+              <Text style={{ fontFamily: FONT, fontSize: 13, fontWeight: '500', color: colors.text }}>{profile.status.label}</Text>
             </View>
           ) : null}
-          {/* Read order: photo and role → name (the largest type on the page) → headline as a tagline → intro. */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: isSm ? SPACE[5] : SPACE[6] }}>
-            {profile.avatar ? (
-              <Image source={{ uri: profile.avatar }} style={{ width: isSm ? 56 : 68, height: isSm ? 56 : 68, borderRadius: 999, backgroundColor: colors.surfaceMuted, boxShadow: `0 0 0 1px ${colors.border}` }} accessibilityLabel={profile.name} />
-            ) : null}
-            <T variant="eyebrow" color="secondary" style={{ flexShrink: 1 }}>{profile.role}</T>
-          </View>
-          <T variant="hero" accessibilityRole="header" aria-level={1} style={{ fontSize: isSm ? 52 : bp === 'md' ? 76 : 96, lineHeight: isSm ? 54 : bp === 'md' ? 78 : 96, letterSpacing: isSm ? -1.4 : bp === 'md' ? -2.2 : -2.8, fontWeight: '800' }}>{profile.name}</T>
-          <T variant="h2" weight="500" style={{ marginTop: isSm ? SPACE[4] : SPACE[5], maxWidth: 760 }}>{profile.headline}</T>
-          <T variant="lead" color="secondary" style={{ marginTop: SPACE[5], maxWidth: 680 }}>{profile.intro}</T>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACE[3], marginTop: SPACE[8] }}>
-            <Button title="View my work" href="/#work" size={isSm ? 'md' : 'lg'} />
-            <Button title="Résumé" href="/resume" variant="secondary" size={isSm ? 'md' : 'lg'} iconRight="arrow-up-right" />
-          </View>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: SPACE[5], marginTop: SPACE[5] }}>
-            <Button variant="link" size="sm" title="Recruiter? Read the 30-second brief" iconRight="chevron-right" href="/brief" />
-            {content.settings.showRoleFit ? <Button variant="link" size="sm" title="Check my fit for your role" iconRight="chevron-right" href="/#fit" /> : null}
-          </View>
-        </Reveal>
+          {availability.map(([icon, label]) => (
+            <View key={icon} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Icon name={icon} size={14} color="secondary" />
+              <Text style={{ fontFamily: FONT, fontSize: 13, color: colors.text2 }}>{label}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+      <T variant="hero" accessibilityRole="header" aria-level={1} style={{ fontSize: isSm ? 52 : bp === 'md' ? 72 : 96, lineHeight: isSm ? 54 : bp === 'md' ? 74 : 96, letterSpacing: isSm ? -1.4 : bp === 'md' ? -2.0 : -2.8, fontWeight: '800' }}>{profile.name}</T>
+      <T variant="h3" weight="500" color="secondary" style={{ marginTop: isSm ? SPACE[3] : SPACE[4] }}>{profile.role}</T>
+      <T variant="h2" style={{ marginTop: isSm ? SPACE[6] : SPACE[7], maxWidth: 640 }}>{profile.headline}</T>
+      <T variant="lead" color="secondary" style={{ marginTop: SPACE[4], maxWidth: 620 }}>{profile.intro}</T>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACE[3], marginTop: SPACE[8] }}>
+        <Button title="View my work" href="/#work" size={isSm ? 'md' : 'lg'} />
+        <Button title="Résumé" href="/resume" variant="secondary" size={isSm ? 'md' : 'lg'} iconRight="arrow-up-right" />
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: SPACE[5], rowGap: SPACE[2], marginTop: SPACE[5] }}>
+        <Button variant="link" size="sm" title="Recruiter? Read the 30-second brief" iconRight="chevron-right" href="/brief" />
+        {content.settings.showRoleFit ? <Button variant="link" size="sm" title="Check my fit for your role" iconRight="chevron-right" href="/#fit" /> : null}
+      </View>
+    </View>
+  );
 
-        <Reveal delay={150}>
-          <View style={{ flexDirection: 'row', marginTop: isSm ? SPACE[10] : SPACE[12], borderTopWidth: 1, borderTopColor: colors.border, paddingTop: SPACE[6], gap: isSm ? SPACE[5] : SPACE[10] }}>
-            {stats.map((s) => (
-              <View key={s.label} style={{ flex: isSm ? 1 : undefined }}>
-                <T variant="title" style={{ fontVariant: ['tabular-nums'] }}>{s.value}</T>
-                <T variant="caption" color="secondary" style={{ marginTop: 2 }}>{s.label}</T>
-              </View>
-            ))}
-          </View>
+  return (
+    <View style={{ backgroundColor: colors.page, paddingTop: isSm ? SPACE[9] : bp === 'md' ? SPACE[12] : SPACE[14], paddingBottom: isSm ? SPACE[10] : SPACE[14] }}>
+      <Container>
+        <Reveal>
+          {side ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: bp === 'lg' ? SPACE[12] : SPACE[9] }}>
+              {text}
+              <Image source={{ uri: profile.avatar }} accessibilityLabel={profile.name} style={{ width: photo, height: photo * 1.2, borderRadius: 32, backgroundColor: colors.surfaceMuted, boxShadow: '0 24px 60px rgba(0,0,0,0.14)' }} resizeMode="cover" />
+            </View>
+          ) : (
+            <View>
+              {profile.avatar ? <Image source={{ uri: profile.avatar }} accessibilityLabel={profile.name} style={{ width: 112, height: 112, borderRadius: 999, marginBottom: SPACE[6], backgroundColor: colors.surfaceMuted, boxShadow: '0 12px 30px rgba(0,0,0,0.12)' }} /> : null}
+              {text}
+            </View>
+          )}
         </Reveal>
       </Container>
     </View>
   );
 }
 
-// ── How I work ───────────────────────────────────────────────────────────────────────
-function HowIWork({ alt }) {
+// Apple-style statements: a bold lead-in, then the sentence in a quieter tone.
+function Statements({ items }) {
   const { colors } = useTheme();
   const { bp } = useBreakpoint();
+  const [size, line] = bp === 'lg' ? [32, 42] : bp === 'md' ? [28, 37] : [22, 30];
+  const end = (s) => (/[.!?:]$/.test(s) ? s : `${s}.`);
+  return (
+    <View style={{ gap: bp === 'sm' ? SPACE[7] : SPACE[9], maxWidth: 920 }}>
+      {items.map((it, i) => (
+        <Reveal key={it.key || i} delay={i * 80}>
+          <Text style={{ fontFamily: FONT, fontSize: size, lineHeight: line, fontWeight: '600', letterSpacing: bp === 'sm' ? -0.3 : -0.6, color: colors.text3 }}>
+            <Text style={{ color: colors.text }}>{end(it.lead.trim())}</Text>{it.text ? ` ${it.text.trim()}` : ''}
+          </Text>
+        </Reveal>
+      ))}
+    </View>
+  );
+}
+
+// ── How I work ───────────────────────────────────────────────────────────────────────
+function HowIWork({ alt }) {
   const items = useContent().content.principles.filter((p) => p.title?.trim());
   return (
     <Section id="how" alt={alt} eyebrow="How I work" title="What you can expect from me.">
-      <Grid columns={bp === 'sm' ? 1 : Math.min(3, items.length)}>
-        {items.map((p, i) => (
-          <Reveal key={p.id || i} delay={i * 80} style={{ flex: 1 }}>
-            <Card style={{ flex: 1 }}>
-              <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: SPACE[5] }}>
-                <Icon name={p.icon || 'check'} size={20} color="accent" />
-              </View>
-              <T variant="h3">{p.title}</T>
-              {p.text ? <T variant="body" color="secondary" style={{ marginTop: SPACE[2] }}>{p.text}</T> : null}
-            </Card>
-          </Reveal>
-        ))}
-      </Grid>
+      <Statements items={items.map((p, i) => ({ key: p.id || i, lead: p.title, text: p.text }))} />
     </Section>
   );
 }
 
 // ── Now ──────────────────────────────────────────────────────────────────────────────
 function Now({ alt }) {
-  const { bp } = useBreakpoint();
   const { content } = useContent();
   const { now } = content;
   return (
     <Section id="now" alt={alt} eyebrow="Now" title="What I'm focused on." action={now.updated ? <Tag icon="clock">Updated {formatMonth(now.updated)}</Tag> : null}>
-      <Grid columns={bp === 'sm' ? 1 : Math.min(3, now.items.length)}>
-        {now.items.map((item, i) => (
-          <Reveal key={`${item.label}-${i}`} delay={i * 80} style={{ flex: 1 }}>
-            <Card style={{ flex: 1 }}>
-              <T variant="label" color="accent" style={{ marginBottom: SPACE[3] }}>{item.label}</T>
-              <T variant="h3" weight="500">{item.text}</T>
-            </Card>
-          </Reveal>
-        ))}
-      </Grid>
+      <Statements items={now.items.filter((x) => x.label || x.text).map((x, i) => ({ key: `${x.label}-${i}`, lead: x.label || x.text, text: x.label ? x.text : '' }))} />
     </Section>
   );
 }
@@ -444,7 +428,7 @@ function Contact({ alt }) {
                 <Icon name={s.icon || 'link'} size={22} color="accent" />
                 <View style={{ flex: 1 }}>
                   <T variant="caption" color="secondary">{s.label}</T>
-                  <T variant="body" weight="500" numberOfLines={1}>{s.url.replace(/^https?:\/\/(www\.)?/, '')}</T>
+                  <T variant="body" weight="500" numberOfLines={1}>{shortUrl(s.url)}</T>
                 </View>
                 <Icon name="arrow-up-right" color="tertiary" />
               </Stack>
@@ -472,10 +456,10 @@ function Contact({ alt }) {
               ) : (
                 <View style={{ gap: SPACE[5] }}>
                   <View style={{ flexDirection: bp === 'sm' ? 'column' : 'row', gap: SPACE[5] }}>
-                    <Field style={{ flex: 1 }} label="Name" value={form.name} onChange={set('name')} autoComplete="name" error={errors.name} />
-                    <Field style={{ flex: 1 }} label="Email" value={form.email} onChange={set('email')} autoComplete="email" keyboardType="email-address" autoCapitalize="none" error={errors.email} />
+                    <Field style={{ flex: 1 }} label="Name" value={form.name} onChange={set('name')} autoComplete="name" placeholder="Juan Dela Cruz" error={errors.name} />
+                    <Field style={{ flex: 1 }} label="Email" value={form.email} onChange={set('email')} autoComplete="email" placeholder="you@company.com" keyboardType="email-address" autoCapitalize="none" error={errors.email} />
                   </View>
-                  <Field label="Message" value={form.message} onChange={set('message')} multiline rows={5} error={errors.message} />
+                  <Field label="Message" value={form.message} onChange={set('message')} multiline rows={5} placeholder={`Hi ${profile.initials || profile.name.split(' ')[0]}, we're hiring OJT interns for our web team and liked your projects. Are you free for a short call this week?`} error={errors.message} />
                   {/* Honeypot: hidden from people, filled in by bots. */}
                   <View style={{ position: 'absolute', left: -9999, width: 1, height: 1, overflow: 'hidden' }} aria-hidden>
                     <Field label="Website" value={form.website} onChange={set('website')} tabIndex={-1} autoComplete="off" />
