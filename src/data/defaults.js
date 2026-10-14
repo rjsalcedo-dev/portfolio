@@ -176,6 +176,7 @@ export const DEFAULT_CONTENT = {
       achievementIds: [],
       skillIds: ['s-lang', 's-fw', 's-cloud', 's-tools'],
       showQr: true,
+      showPhoto: true,
     },
   ],
 
@@ -194,6 +195,21 @@ export const DEFAULT_CONTENT = {
   },
 };
 
+// A link saved as "www.linkedin.com/in/…" has no scheme, so the browser would treat it as a
+// page on this site. Add https:// and a label when they're missing.
+const LINK_LABELS = { github: 'GitHub', linkedin: 'LinkedIn', globe: 'Website', mail: 'Email' };
+const withScheme = (url) => {
+  const u = String(url || '').trim();
+  if (!u || /^([a-z][a-z0-9+.-]*:|\/|#)/i.test(u)) return u;
+  return /^[^\s/]+\.[a-z]{2,}(\/|$)/i.test(u) ? `https://${u}` : u;
+};
+const fixSocial = (s) => {
+  const url = withScheme(s.url);
+  let host = '';
+  try { host = new URL(url).hostname.replace(/^www\./, ''); } catch {}
+  return { ...s, url, label: s.label?.trim() || LINK_LABELS[s.icon] || host || 'Link' };
+};
+
 // Fills any missing keys from the defaults so older saved content never crashes newer code.
 export function normalizeContent(raw) {
   const d = DEFAULT_CONTENT;
@@ -202,7 +218,7 @@ export function normalizeContent(raw) {
   return {
     ...d,
     ...c,
-    profile: { ...d.profile, ...(c.profile || {}), status: { ...d.profile.status, ...(c.profile?.status || {}) }, socials: arr(c.profile?.socials, d.profile.socials) },
+    profile: { ...d.profile, ...(c.profile || {}), status: { ...d.profile.status, ...(c.profile?.status || {}) }, socials: arr(c.profile?.socials, d.profile.socials).filter((s) => s?.url).map(fixSocial) },
     education: { ...d.education, ...(c.education || {}) },
     now: { ...d.now, ...(c.now || {}), items: arr(c.now?.items, d.now.items) },
     projects: arr(c.projects, d.projects).map((p) => ({ stack: [], highlights: [], gallery: [], metrics: [], links: {}, ...p, links: { ...(p.links || {}) } })),
@@ -211,7 +227,7 @@ export function normalizeContent(raw) {
     achievements: arr(c.achievements, d.achievements),
     testimonials: arr(c.testimonials, d.testimonials),
     skills: arr(c.skills, d.skills).map((x) => ({ items: [], ...x })),
-    resumes: arr(c.resumes, d.resumes).map((r) => ({ projectIds: [], credentialIds: [], experienceIds: [], achievementIds: [], skillIds: [], showQr: true, ...r })),
+    resumes: arr(c.resumes, d.resumes).map((r) => ({ projectIds: [], credentialIds: [], experienceIds: [], achievementIds: [], skillIds: [], showQr: true, showPhoto: true, ...r })),
     settings: { ...d.settings, ...(c.settings || {}) },
   };
 }

@@ -217,6 +217,8 @@ const VERDICT = {
   partial: ['Partial match', 'warning'],
 };
 
+const QUICK = ['Frontend developer', 'Mobile developer', 'IT intern', 'Network engineer'];
+
 export function RoleFit({ alt }) {
   const { colors } = useTheme();
   const { bp, isSm } = useBreakpoint();
@@ -253,14 +255,19 @@ export function RoleFit({ alt }) {
       alt={alt}
       eyebrow="For recruiters"
       title="Does my experience fit your role?"
-      subtitle="Paste a job description. You'll see which requirements I can prove with real projects, and which I can't yet. It runs in your browser; nothing is saved."
+      subtitle="Paste a job description, or just type a role or a few skills. You'll see which ones I can prove with real projects, and which I can't yet. It runs in your browser; nothing is saved."
     >
       <Reveal>
         <Card>
-          <Field value={text} onChange={setText} multiline rows={isSm ? 6 : 7} placeholder="Paste the job description or requirements here…" accessibilityLabel="Job description" />
+          <Field value={text} onChange={setText} multiline rows={isSm ? 6 : 7} placeholder="Paste a job description, or try “frontend developer” or “React, Node.js, SQL”…" accessibilityLabel="Job description" />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: SPACE[3], marginTop: SPACE[4] }}>
             <Button title="Check fit" icon="target" onPress={() => run()} disabled={!text.trim()} align="center" />
             <Button variant="secondary" title="Try a sample posting" onPress={() => { setText(SAMPLE_JD); run(SAMPLE_JD); }} align="center" />
+            {!text ? QUICK.map((q) => (
+              <Pressable key={q} onPress={() => { setText(q); run(q); }} accessibilityRole="button" style={({ hovered }) => ({ paddingHorizontal: 12, height: 32, justifyContent: 'center', borderRadius: 999, borderWidth: 1, borderColor: hovered ? colors.accent : colors.border, backgroundColor: hovered ? colors.accentSoft : 'transparent', cursor: 'pointer' })}>
+                <Text style={{ fontFamily: FONT, fontSize: 13, color: colors.text2 }}>{q}</Text>
+              </Pressable>
+            )) : null}
             {text ? <Button variant="link" size="sm" title="Clear" onPress={() => { setText(''); setResult(null); }} align="center" /> : null}
           </View>
         </Card>
@@ -269,7 +276,7 @@ export function RoleFit({ alt }) {
       {result ? (
         <View nativeID="fit-result" ref={resultRef} style={{ marginTop: SPACE[5] }}>
           {result.total === 0 ? (
-            <Card><T variant="body" color="secondary">I couldn't find specific skills in that text. Try pasting the requirements or qualifications part of the posting.</T></Card>
+            <Card><T variant="body" color="secondary">I couldn't find a role or skills in that. Try a job title like “web developer” or “IT support”, a few skills like “React, Python, Git”, or paste the requirements part of a posting.</T></Card>
           ) : (
             <Card>
               <View style={{ flexDirection: bp === 'sm' ? 'column' : 'row', gap: SPACE[7] }}>
@@ -280,8 +287,13 @@ export function RoleFit({ alt }) {
                   </View>
                   <Text style={{ fontFamily: FONT, fontSize: 15, fontWeight: '600', color: colors[VERDICT[result.verdict][1]] || colors.text, marginBottom: 10 }}>{VERDICT[result.verdict][0]}</Text>
                   <ProgressBar value={result.score} height={8} />
+                  {result.roles.length ? (
+                    <T variant="small" color="secondary" style={{ marginTop: 12 }}>
+                      Read as <Text style={{ fontWeight: '600', color: colors.text }}>{result.roles.join(' + ')}</Text>, so I checked the skills that role usually asks for.
+                    </T>
+                  ) : null}
                   <T variant="small" color="secondary" style={{ marginTop: 12 }}>
-                    {result.proven} of {result.total} skills in this posting are backed by projects or credentials{result.listed ? `; ${result.listed} more are in my toolkit` : ''}.
+                    {result.proven} of {result.total} skills {result.roles.length ? 'checked' : 'in this posting'} are backed by projects or credentials{result.listed ? `; ${result.listed} more are in my toolkit` : ''}.
                   </T>
                   <View style={{ gap: 10, marginTop: SPACE[6] }}>
                     <Button title="Open the best-fit résumé" icon="file-text" href={result.resumeHref} align="stretch" />

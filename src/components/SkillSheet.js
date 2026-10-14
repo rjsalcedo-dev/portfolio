@@ -1,13 +1,14 @@
 // src/components/SkillSheet.js
 // "Show me the proof": every project, credential and role that demonstrates a skill.
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Image, Platform, Pressable, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useTheme } from '../context/ThemeContext';
 import { useContent } from '../context/ContentContext';
 import { useRouter } from '../lib/router';
 import { evidenceCount, evidenceFor, skillEntry } from '../lib/evidence';
 import { formatMonth } from '../lib/format';
+import { BRAND_ICONS } from '../lib/skillIcons';
 import { track } from '../lib/track';
 import { Modal } from './Modal';
 import { T } from './ui';
@@ -91,8 +92,54 @@ function SkillSheet({ skill, onClose }) {
   );
 }
 
+// ── Skill icons ──────────────────────────────────────────────────────────────────────
+// Skill name → Simple Icons slug. Names are matched lower-cased.
+const ALIASES = {
+  'react native': 'react', reactjs: 'react', 'react.js': 'react', js: 'javascript', ts: 'typescript',
+  gdscript: 'godotengine', godot: 'godotengine', html: 'html5', css: 'css3', firestore: 'firebase',
+  'firebase auth': 'firebase', 'node.js': 'nodedotjs', node: 'nodedotjs', nodejs: 'nodedotjs', 'express.js': 'express',
+  'vue.js': 'vuedotjs', vue: 'vuedotjs', 'next.js': 'nextdotjs', tailwind: 'tailwindcss', 'tailwind css': 'tailwindcss',
+  postgres: 'postgresql', java: 'openjdk', 'c++': 'cplusplus', '.net': 'dotnet', 'c#': 'dotnet', golang: 'go',
+  'google cloud': 'googlecloud', gcp: 'googlecloud', 'github actions': 'githubactions', 'ci/cd': 'githubactions',
+  ccna: 'cisco', 'cisco packet tracer': 'cisco', 'redux toolkit': 'redux', 'expo router': 'expo',
+};
+// Skills with no brand mark get a matching Feather glyph instead.
+const GLYPHS = [
+  [/vs ?code|visual studio|editor|\bide\b/, 'code'], [/rest|api/, 'share-2'], [/sql|database|data/, 'database'],
+  [/cloud|aws|azure|serverless/, 'cloud'], [/secur|cyber/, 'shield'], [/network|\blan\b|\bwan\b|tcp/, 'wifi'],
+  [/\bui\b|\bux\b|design|figma/, 'pen-tool'], [/test|qa/, 'check-square'], [/mobile|ios|pwa/, 'smartphone'],
+  [/\bai\b|llm|machine|\bml\b/, 'cpu'], [/game/, 'play'], [/linux|bash|shell|terminal/, 'terminal'],
+  [/support|hardware|troubleshoot/, 'tool'], [/agile|scrum|kanban/, 'trello'],
+];
+
+const luminance = (hex) => {
+  const c = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+};
+
+export function skillIcon(name) {
+  const n = String(name || '').toLowerCase().trim();
+  const slug = ALIASES[n] || n.replace(/\s+/g, '').replace(/\./g, 'dot');
+  if (BRAND_ICONS[slug]) return { brand: BRAND_ICONS[slug] };
+  const glyph = GLYPHS.find(([re]) => re.test(n));
+  return { glyph: glyph ? glyph[1] : 'code' };
+}
+
+// The skill's brand mark in its own color, switched to the text color when the brand color
+// would vanish on the current background (black marks in dark mode, white in light).
+export function SkillIcon({ name, size = 16, mono }) {
+  const { colors, scheme } = useTheme();
+  const icon = skillIcon(name);
+  if (icon.glyph || Platform.OS !== 'web') return <Feather name={icon.glyph || 'code'} size={size - 1} color={colors.text2} />;
+  const [hex, path] = icon.brand;
+  const l = luminance(hex);
+  const fill = mono || (scheme === 'dark' ? l < 0.06 : l > 0.8) ? colors.text : `#${hex}`;
+  return React.createElement('svg', { viewBox: '0 0 24 24', width: size, height: size, 'aria-hidden': true, style: { flexShrink: 0, display: 'block' } },
+    React.createElement('path', { d: path, fill }));
+}
+
 // A skill chip that opens its proof. Shows how many pieces of evidence back it up.
-export function SkillChip({ name, size = 'md', showCount = true }) {
+export function SkillChip({ name, size = 'md', showCount = true, icon = size !== 'sm' }) {
   const { colors } = useTheme();
   const { content } = useContent();
   const { openSkill } = useSkillSheet();
@@ -105,13 +152,14 @@ export function SkillChip({ name, size = 'md', showCount = true }) {
       accessibilityLabel={`${name}${n ? `, used in ${n} places` : ''}. Show proof`}
       style={({ hovered }) => ({
         flexDirection: 'row', alignItems: 'center', gap: 6,
-        paddingLeft: sm ? 10 : 12, paddingRight: n && showCount ? (sm ? 5 : 6) : sm ? 10 : 12,
+        paddingLeft: icon ? (sm ? 8 : 10) : sm ? 10 : 12, paddingRight: n && showCount ? (sm ? 5 : 6) : sm ? 10 : 12,
         height: sm ? 26 : 32, borderRadius: 999, borderWidth: 1,
         borderColor: hovered ? colors.accent : colors.border,
         backgroundColor: hovered ? colors.accentSoft : sm ? colors.surfaceMuted : colors.surface,
         cursor: 'pointer', transitionProperty: 'border-color, background-color', transitionDuration: '150ms',
       })}
     >
+      {icon ? <SkillIcon name={name} size={sm ? 13 : 16} /> : null}
       <Text style={{ fontFamily: FONT, fontSize: sm ? 12 : 14, fontWeight: sm ? '500' : '400', color: sm ? colors.text2 : colors.text }}>{name}</Text>
       {n && showCount ? (
         <View style={{ minWidth: sm ? 16 : 20, height: sm ? 16 : 20, borderRadius: 10, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 }}>

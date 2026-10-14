@@ -115,8 +115,14 @@ export default function ResumeScreen({ version }) {
           dataSet={{ paper: true }}
           style={{ width: '100%', maxWidth: 794, alignSelf: 'center', backgroundColor: '#fff', borderRadius: isSm ? 12 : 4, paddingHorizontal: isSm ? 22 : 56, paddingVertical: isSm ? 26 : 52, boxShadow: '0 4px 30px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)' }}
         >
-          <View style={{ flexDirection: 'row', gap: 20, alignItems: 'flex-start' }}>
-            <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', gap: isSm ? 14 : 20, alignItems: isSm ? 'center' : 'flex-start' }}>
+            {resume.showPhoto && profile.avatar && isWeb ? (
+              React.createElement('img', {
+                src: profile.avatar, alt: profile.name, width: isSm ? 64 : 92, height: isSm ? 64 : 92,
+                style: { width: isSm ? 64 : 92, height: isSm ? 64 : 92, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, boxShadow: '0 0 0 1px rgba(0,0,0,0.08)' },
+              })
+            ) : null}
+            <View style={{ flex: 1, alignSelf: 'center' }}>
               <R size={isSm ? 26 : 30} weight="700">{profile.name}</R>
               <R size={14} weight="500" color={INK2} style={{ marginTop: 2 }}>{resume.headline || profile.role}</R>
               <R size={11.5} color={INK2} style={{ marginTop: 8 }}>{contact.join('   ·   ')}</R>

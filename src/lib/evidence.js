@@ -4,9 +4,9 @@
 
 // Canonical skills with the words people use for them. Terms are matched as whole words.
 const CANON = [
-  ['JavaScript', ['javascript', 'es6', 'ecmascript']],
-  ['TypeScript', ['typescript']],
-  ['Python', ['python']],
+  ['JavaScript', ['javascript', 'js', 'es6', 'ecmascript']],
+  ['TypeScript', ['typescript', 'ts']],
+  ['Python', ['python', 'py']],
   ['Java', ['java']],
   ['C++', ['c++']],
   ['C#', ['c#', '.net']],
@@ -14,18 +14,18 @@ const CANON = [
   ['SQL', ['sql', 'mysql', 'postgresql', 'postgres', 'sqlite']],
   ['HTML', ['html', 'html5']],
   ['CSS', ['css', 'css3', 'tailwind', 'tailwind css', 'sass', 'scss']],
-  ['React', ['react', 'react.js', 'reactjs']],
-  ['React Native', ['react native', 'expo', 'expo router']],
+  ['React', ['react', 'react.js', 'reactjs', 'react js']],
+  ['React Native', ['react native', 'reactnative', 'rn', 'expo', 'expo router']],
   ['Vue', ['vue', 'vue.js', 'nuxt']],
   ['Angular', ['angular']],
-  ['Node.js', ['node', 'node.js', 'nodejs']],
+  ['Node.js', ['node', 'node.js', 'nodejs', 'node js']],
   ['Express', ['express', 'express.js']],
   ['FastAPI', ['fastapi']],
   ['Django', ['django']],
   ['Flask', ['flask']],
   ['Firebase', ['firebase', 'firestore', 'firebase auth']],
   ['MongoDB', ['mongodb', 'mongoose']],
-  ['REST APIs', ['rest', 'rest api', 'rest apis', 'restful', 'api integration']],
+  ['REST APIs', ['rest api', 'rest apis', 'restful', 'api', 'apis', 'api integration', 'web services']],
   ['GraphQL', ['graphql']],
   ['Git', ['git', 'version control']],
   ['GitHub', ['github', 'github actions']],
@@ -38,12 +38,12 @@ const CANON = [
   ['Netlify', ['netlify', 'netlify functions']],
   ['Cloudflare', ['cloudflare', 'cloudflare r2']],
   ['Serverless', ['serverless', 'netlify functions', 'cloud functions', 'lambda']],
-  ['Linux', ['linux', 'unix', 'bash', 'shell']],
+  ['Linux', ['linux', 'unix', 'bash', 'shell scripting', 'ubuntu']],
   ['Networking', ['networking', 'ccna', 'tcp/ip', 'routing', 'switching', 'vlan', 'vlans', 'subnetting', 'ospf', 'lan', 'wan', 'cisco']],
-  ['Cybersecurity', ['cybersecurity', 'network security', 'security', 'ethical hacking', 'penetration testing', 'soc']],
+  ['Cybersecurity', ['cybersecurity', 'cyber security', 'network security', 'information security', 'infosec', 'ethical hacking', 'penetration testing', 'pentesting', 'soc']],
   ['AI / LLMs', ['ai', 'artificial intelligence', 'llm', 'llms', 'machine learning', 'ollama', 'llama', 'llava', 'genai', 'generative ai']],
   ['Mobile apps', ['mobile', 'ios', 'android', 'mobile development', 'mobile apps']],
-  ['UI/UX', ['ui/ux', 'ui', 'ux', 'user interface', 'figma', 'responsive design']],
+  ['UI/UX', ['ui/ux', 'ui', 'ux', 'user interface', 'user experience', 'figma', 'responsive design']],
   ['PWA', ['pwa', 'progressive web app']],
   ['Electron', ['electron', 'desktop app']],
   ['Redux', ['redux', 'redux toolkit']],
@@ -63,6 +63,28 @@ const IMPLIED_BY = {
   'Mobile apps': ['react native', 'expo', 'expo router'],
   Serverless: ['netlify functions'],
 };
+
+// Job titles a recruiter might type on their own ("frontend developer", "IT intern"). Each
+// stands in for the skills that role usually asks for. Patterns run on normalized text.
+const ROLES = [
+  ['Front-end developer', /\bfront ?end\b|\bui (developer|engineer)\b|\bweb designer\b/, ['HTML', 'CSS', 'JavaScript', 'React', 'UI/UX', 'Git']],
+  ['Back-end developer', /\bback ?end\b|\bapi (developer|engineer)\b|\bserver side\b/, ['Node.js', 'Python', 'REST APIs', 'SQL', 'Git', 'Serverless']],
+  ['Full-stack developer', /\bfull ?stack\b/, ['JavaScript', 'React', 'Node.js', 'REST APIs', 'SQL', 'HTML', 'CSS', 'Git']],
+  ['Web developer', /\bweb (developer|dev|development|programmer)\b|\bwebsites?\b/, ['HTML', 'CSS', 'JavaScript', 'React', 'REST APIs', 'Git']],
+  ['Mobile developer', /\b(mobile|android|ios|app) (developer|dev|development|engineer)\b|\bmobile apps?\b/, ['Mobile apps', 'React Native', 'JavaScript', 'Firebase', 'REST APIs', 'Git']],
+  ['Software developer', /\bsoftware (developer|engineer|engineering|development)\b|\b(programmer|swe|sde|developer|dev)\b/, ['JavaScript', 'Python', 'Git', 'REST APIs', 'SQL']],
+  ['Network engineer', /\bnetwork(ing)? (engineer|admin|administrator|technician|specialist)\b|\bnoc\b/, ['Networking', 'Linux', 'Cybersecurity', 'IT support']],
+  ['IT support', /\b(it|technical|tech|desktop) support\b|\bhelp ?desk\b|\bservice desk\b|\bit (specialist|technician|staff|assistant)\b/, ['IT support', 'Networking', 'Linux']],
+  ['Security analyst', /\bsecurity (analyst|engineer|specialist)\b|\bsoc analyst\b/, ['Cybersecurity', 'Networking', 'Linux', 'Python']],
+  ['DevOps / cloud', /\bdevops\b|\bcloud (engineer|developer)\b|\bsre\b|\bsite reliability\b/, ['Linux', 'Docker', 'CI/CD', 'Git', 'AWS', 'Serverless']],
+  ['Data analyst', /\bdata (analyst|analytics|science|scientist|engineer)\b|\bbusiness intelligence\b/, ['SQL', 'Python', 'Data analytics']],
+  ['AI / ML engineer', /\b(ai|ml|machine learning|llm) (engineer|developer|intern)\b|\bprompt engineer\b/, ['AI / LLMs', 'Python', 'REST APIs']],
+  ['Game developer', /\bgame (developer|dev|programmer|designer|development)\b/, ['Game development', 'Python', 'Git']],
+  ['UI/UX designer', /\b(ui|ux|ui\/ux|product) designer\b/, ['UI/UX', 'HTML', 'CSS']],
+  ['QA tester', /\bquality assurance\b|\b(qa|test) (tester|engineer|analyst)\b|\btester\b/, ['Testing', 'Git']],
+  // A student role with no field named: the general developer basics.
+  ['IT intern', /\b(it|ict|computer science|cs) (intern|internship|ojt|trainee)\b|^ ?(intern|internship|ojt|trainee) ?$/, ['JavaScript', 'Python', 'Git', 'Networking', 'IT support']],
+];
 
 const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
@@ -98,7 +120,8 @@ export const evidenceCount = (ev) => ev.projects.length + ev.credentials.length 
 
 // Reads a job description and sorts each skill it mentions into proven / listed / gap.
 export function analyzeRole(text, content) {
-  const jd = ` ${norm(text)} `;
+  // "Front-end", "full-stack" and "node-js" read the same as their spaced forms.
+  const jd = ` ${norm(String(text || '').replace(/(\w)[-_](?=\w)/g, '$1 '))} `;
   const listed = new Set(content.skills.flatMap((g) => g.items).map((s) => skillEntry(s).label));
   const entries = new Map();
   for (const [label, terms] of CANON) {
@@ -109,11 +132,20 @@ export function analyzeRole(text, content) {
     const e = skillEntry(s);
     if (!entries.has(e.label) && e.terms.some((t) => hasTerm(jd, t))) entries.set(e.label, e);
   }
+  // Role titles bring in the skills that role usually needs, so a short query like
+  // "frontend developer" still has something to check. "Developer" on its own only counts
+  // when nothing more specific did: "Python developer" is about Python, not every language.
+  // A full posting already lists its skills, so titles only fill in for short queries.
+  const roles = entries.size < 3 ? ROLES.filter(([, re]) => re.test(jd)) : [];
+  const picked = roles.filter(([name]) => name !== 'Software developer' || (roles.length === 1 && !entries.size));
+  for (const [, , skills] of picked) {
+    for (const label of skills) if (!entries.has(label)) entries.set(label, { ...skillEntry(label), implied: true });
+  }
   const results = [...entries.values()].map((e) => {
     const ev = evidenceFor(e.label, content);
     const n = evidenceCount(ev);
     const status = n > 0 ? 'proven' : listed.has(e.label) ? 'listed' : 'gap';
-    return { skill: e.label, status, evidence: ev, count: n };
+    return { skill: e.label, status, evidence: ev, count: n, implied: !!e.implied };
   });
   const order = { proven: 0, listed: 1, gap: 2 };
   results.sort((a, b) => order[a.status] - order[b.status] || b.count - a.count);
@@ -130,6 +162,7 @@ export function analyzeRole(text, content) {
 
   return {
     results, total, proven, listed: listedN, score,
+    roles: picked.map(([name]) => name),
     verdict: !total ? 'none' : score >= 0.75 ? 'strong' : score >= 0.5 ? 'good' : 'partial',
     resumeHref: best ? (best.i === 0 ? '/resume' : `/resume/${best.r.slug || best.r.id}`) : '/resume',
   };
