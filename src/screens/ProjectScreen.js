@@ -1,6 +1,6 @@
 // src/screens/ProjectScreen.js
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Platform, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useTheme, useBreakpoint } from '../context/ThemeContext';
 import { useContent } from '../context/ContentContext';
@@ -12,6 +12,7 @@ import { Grid, ProjectCard, ProjectCover } from '../components/Cards';
 import { FONT, RADIUS, SPACE } from '../theme/tokens';
 import NotFoundScreen from './NotFoundScreen';
 import { Lightbox } from '../components/Modal';
+import { Gallery } from '../components/Carousel';
 import { SkillChip } from '../components/SkillSheet';
 
 export default function ProjectScreen({ slug }) {
@@ -149,14 +150,7 @@ export default function ProjectScreen({ slug }) {
         <Container width={1120} style={{ paddingBottom: isSm ? SPACE[10] : SPACE[12] }}>
           <Reveal>
             <T variant="h2" nativeID="sec-gallery" style={{ marginBottom: SPACE[5] }}>Gallery</T>
-            <Grid columns={isSm ? 1 : bp === 'md' ? 2 : 3} gap={16}>
-              {project.gallery.map((g, i) => (
-                <Pressable key={g.url + i} onPress={() => setZoom(i)} accessibilityLabel={g.caption || 'Screenshot ' + (i + 1)} style={({ hovered }) => ({ borderRadius: RADIUS.lg, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, cursor: 'zoom-in', transform: [{ scale: hovered ? 1.01 : 1 }], transitionProperty: 'transform', transitionDuration: '300ms' })}>
-                  <Image source={{ uri: g.url }} resizeMode="cover" style={{ width: '100%', aspectRatio: 16 / 10, backgroundColor: colors.surfaceMuted }} />
-                  {g.caption ? <T variant="caption" color="secondary" style={{ padding: 12 }} numberOfLines={2}>{g.caption}</T> : null}
-                </Pressable>
-              ))}
-            </Grid>
+            <Gallery images={project.gallery} onOpen={setZoom} />
           </Reveal>
           <Lightbox images={project.gallery} index={zoom} onIndex={setZoom} onClose={() => setZoom(null)} />
         </Container>

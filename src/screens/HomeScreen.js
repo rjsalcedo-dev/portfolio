@@ -8,6 +8,7 @@ import { api } from '../lib/api';
 import { availabilityParts, formatMonth, formatRange, progressBetween, shortUrl, toDate } from '../lib/format';
 import { Button, Card, Chips, Container, Divider, Icon, Reveal, Section, Stack, StatusDot, T, Tag } from '../components/ui';
 import { CredentialCard, Grid, ProgressBar, ProjectCard } from '../components/Cards';
+import { Carousel } from '../components/Carousel';
 import { Field } from '../components/Form';
 import { CredentialSheet, ShareSheet } from '../components/Sheets';
 import { SkillChip } from '../components/SkillSheet';
@@ -161,22 +162,28 @@ function Work({ alt }) {
   const categories = useMemo(() => ['All', ...new Set(projects.map((p) => p.category).filter(Boolean))], [projects]);
   const [filter, setFilter] = useState('All');
   const shown = filter === 'All' ? projects : projects.filter((p) => p.category === filter);
-  const featured = filter === 'All' ? shown.filter((p) => p.featured) : [];
-  const rest = shown.filter((p) => !featured.includes(p));
+  // Featured work leads the row.
+  const ordered = [...shown.filter((p) => p.featured), ...shown.filter((p) => !p.featured)];
+  const gutter = bp === 'sm' ? SPACE[5] : 12;
 
   return (
     <Section id="work" alt={alt} eyebrow="Work" title="Selected projects." subtitle="Apps, tools and games I've designed and built, from first sketch to deployment.">
       {categories.length > 2 ? (
         <Reveal style={{ marginBottom: SPACE[7] }}><Chips options={categories} value={filter} onChange={setFilter} /></Reveal>
       ) : null}
-      {featured.length ? (
-        <Grid columns={bp === 'sm' ? 1 : Math.min(2, featured.length)} style={{ marginBottom: SPACE[5] }}>
-          {featured.map((p, i) => <Reveal key={p.id} delay={i * 80} style={{ flex: 1 }}><ProjectCard project={p} large={bp !== 'sm'} /></Reveal>)}
-        </Grid>
-      ) : null}
-      <Grid columns={bp === 'sm' ? 1 : bp === 'md' ? 2 : 3}>
-        {rest.map((p, i) => <Reveal key={p.id} delay={(i % 3) * 80} style={{ flex: 1 }}><ProjectCard project={p} /></Reveal>)}
-      </Grid>
+      <Reveal>
+        <Carousel
+          key={filter}
+          data={ordered}
+          label="Projects"
+          perView={bp === 'sm' ? 1 : bp === 'md' ? 2 : 3}
+          peek={bp === 'sm' && ordered.length > 1 ? 0.12 : 0}
+          gap={bp === 'sm' ? 14 : 20}
+          bleed={gutter}
+          keyExtractor={(p) => p.id}
+          renderItem={(p) => <ProjectCard project={p} />}
+        />
+      </Reveal>
     </Section>
   );
 }
