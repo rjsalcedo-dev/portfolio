@@ -103,7 +103,7 @@ export const DEFAULT_CONTENT = {
       featured: false,
       cover: '',
       stack: ['React Native', 'Expo', 'Firebase'],
-      links: { live: '', repo: 'https://github.com/rjsalcedo-dev/UFitness-IOS-' },
+      links: { live: 'https://ufitness-booth.netlify.app/', repo: 'https://github.com/rjsalcedo-dev/UFitness-IOS-' },
       summary: 'A mobile fitness app built with Expo and Firebase.',
       highlights: [],
       body: '',
@@ -167,8 +167,9 @@ export const DEFAULT_CONTENT = {
 
   skills: [
     { id: 's-lang', group: 'Languages', items: ['JavaScript', 'Python', 'GDScript', 'HTML', 'CSS'] },
-    { id: 's-fw', group: 'Frameworks', items: ['React Native', 'Expo', 'React', 'FastAPI'] },
-    { id: 's-cloud', group: 'Cloud & Data', items: ['Firebase', 'Netlify', 'Firestore', 'REST APIs'] },
+    { id: 's-fe', group: 'Front end & mobile', items: ['React', 'React Native', 'Expo', 'Vite', 'Redux Toolkit', 'Tailwind CSS', 'Electron'] },
+    { id: 's-be', group: 'Back end & data', items: ['Node.js', 'Express', 'FastAPI', 'Socket.IO', 'MongoDB', 'Firebase', 'REST APIs'] },
+    { id: 's-cloud', group: 'Cloud & DevOps', items: ['Netlify Functions', 'Docker', 'GitHub Actions', 'Cloudflare R2', 'Render'] },
     { id: 's-tools', group: 'Tools', items: ['Git', 'GitHub', 'Godot', 'Ollama', 'VS Code'] },
   ],
 

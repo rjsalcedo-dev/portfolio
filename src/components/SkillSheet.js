@@ -102,14 +102,15 @@ const ALIASES = {
   postgres: 'postgresql', java: 'openjdk', 'c++': 'cplusplus', '.net': 'dotnet', 'c#': 'dotnet', golang: 'go',
   'google cloud': 'googlecloud', gcp: 'googlecloud', 'github actions': 'githubactions', 'ci/cd': 'githubactions',
   ccna: 'cisco', 'cisco packet tracer': 'cisco', 'redux toolkit': 'redux', 'expo router': 'expo',
+  'netlify functions': 'netlify', 'cloudflare r2': 'cloudflare',
 };
 // Skills with no brand mark get a matching Feather glyph instead.
 const GLYPHS = [
   [/vs ?code|visual studio|editor|\bide\b/, 'code'], [/rest|api/, 'share-2'], [/sql|database|data/, 'database'],
-  [/cloud|aws|azure|serverless/, 'cloud'], [/secur|cyber/, 'shield'], [/network|\blan\b|\bwan\b|tcp/, 'wifi'],
+  [/cloud|aws|azure|serverless|^render$/, 'cloud'], [/secur|cyber/, 'shield'], [/network|\blan\b|\bwan\b|tcp/, 'wifi'],
   [/\bui\b|\bux\b|design|figma/, 'pen-tool'], [/test|qa/, 'check-square'], [/mobile|ios|pwa/, 'smartphone'],
   [/\bai\b|llm|machine|\bml\b/, 'cpu'], [/game/, 'play'], [/linux|bash|shell|terminal/, 'terminal'],
-  [/support|hardware|troubleshoot/, 'tool'], [/agile|scrum|kanban/, 'trello'],
+  [/support|hardware|troubleshoot/, 'tool'], [/agile|scrum|kanban/, 'trello'], [/socket|realtime/, 'zap'],
 ];
 
 const luminance = (hex) => {
